@@ -9,9 +9,9 @@ This EDA demonstrates insurance industry domain knowledge through 8 key analyses
 3. Multi-product lead analysis and cross-sell opportunity
 4. Geographic analysis of conversion, LTV, and regulatory impact
 5. Early claim rate by channel (adverse selection analysis)
-6. Risk-adjusted policy value by marketing channel
+6. Average policy profitability by marketing channel
 7. State-level claim frequency and loss ratio map
-8. Bind rate vs. early claims rate (channel risk analysis)
+8. Bind rate vs. early claims rate (channel profit analysis)
 
 Author: [Your Name]
 """
@@ -397,7 +397,7 @@ def analysis_4_geographic(leads):
     plt.close()
     
     print("\n💡 INSIGHT: Significant state-level variation suggests regulatory environment,")
-    print("   competitive dynamics, and risk profiles differ by geography. States with")
+    print("   competitive dynamics, and profit profiles differ by geography. States with")
     print("   high loss ratios may require pricing adjustments or underwriting changes.")
     
     return state_metrics
@@ -511,10 +511,10 @@ def analysis_5_early_claims_by_channel(leads):
 
 
 # =============================================================================
-# ANALYSIS 6: Risk-Adjusted Policy Value by Channel
+# ANALYSIS 6: Average Policy Profitability by Channel
 # =============================================================================
 
-def analysis_6_risk_adjusted_value(leads):
+def analysis_6_policy_profitability(leads):
     """
     Calculate Expected Value = Premium × Tenure − Claims by channel.
     
@@ -546,7 +546,7 @@ def analysis_6_risk_adjusted_value(leads):
         'lead_id': 'count',
     }).rename(columns={'lead_id': 'policies'})
     
-    print("\nRisk-Adjusted Policy Economics by Channel:")
+    print("\nPolicy Profitability by Channel:")
     print("-" * 80)
     print(f"{'Channel':<15} {'Policies':<10} {'Avg Premium':<12} {'Avg Tenure':<12} "
           f"{'Avg Claims':<12} {'Exp. Value':<12}")
@@ -567,7 +567,7 @@ def analysis_6_risk_adjusted_value(leads):
     # Expected value by channel
     exp_values = [channel_value.loc[c, 'expected_value'] for c in channels]
     bars = axes[0].bar(channels, exp_values, color=colors, edgecolor='black', linewidth=1.5)
-    axes[0].set_title('Risk-Adjusted Average Policy Value by Channel\n'
+    axes[0].set_title('Average Policy Profitability by Channel\n'
                       '(Expected Value = Total Premium − Expected Claims)', fontsize=12)
     axes[0].set_ylabel('Expected Value ($)')
     axes[0].set_xlabel('Marketing Channel')
@@ -598,7 +598,7 @@ def analysis_6_risk_adjusted_value(leads):
     axes[1].yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
     
     plt.tight_layout()
-    plt.savefig('analysis_6_risk_adjusted_value.png', dpi=150, bbox_inches='tight')
+    plt.savefig('analysis_6_policy_profitability.png', dpi=150, bbox_inches='tight')
     plt.close()
     
     # ROI calculation incorporating CAC
@@ -615,9 +615,9 @@ def analysis_6_risk_adjusted_value(leads):
         print(f"  {channel}: CAC=${cac:.0f}, Exp.Value=${exp_val:,.0f}, "
               f"Net=${net_value:,.0f}, ROI={roi:.0f}%")
     
-    print("\n💡 INSIGHT: Despite higher CPL, paid_search delivers the highest risk-adjusted")
-    print("   value per policy. Email's low CPL is offset by poor policy economics,")
-    print("   making it potentially unprofitable on a risk-adjusted basis.")
+    print("\n💡 INSIGHT: Despite higher CPL, paid_search delivers the highest profit")
+    print("   per policy. Email's low CPL is offset by poor policy economics,")
+    print("   making it potentially unprofitable on a profitability basis.")
     
     return channel_value
 
@@ -892,7 +892,7 @@ def run_full_eda(data_dir='insure_co_data'):
     results['cross_sell'] = analysis_3_cross_sell(leads)
     results['geographic'] = analysis_4_geographic(leads)
     results['early_claims'] = analysis_5_early_claims_by_channel(leads)
-    results['risk_adjusted'] = analysis_6_risk_adjusted_value(leads)
+    results['profitability'] = analysis_6_policy_profitability(leads)
     results['state_claims'] = analysis_7_state_claims_map(leads)
     results['bind_vs_claims'] = analysis_8_bind_vs_claims(leads)
     
@@ -919,7 +919,7 @@ KEY FINDINGS:
 5. ADVERSE SELECTION: Clear evidence that cheaper acquisition channels
    attract higher-risk customers with more early claims.
 
-6. CHANNEL ECONOMICS: When risk-adjusted, paid search delivers best value
+6. CHANNEL ECONOMICS: When accounting for claims, paid search delivers best profitability
    despite higher CPL; email may be unprofitable.
 
 7. STATE RISK CONCENTRATION: Identified outlier states requiring
@@ -942,7 +942,7 @@ RECOMMENDATIONS:
     print("  - analysis_3_cross_sell.png")
     print("  - analysis_4_geographic.png")
     print("  - analysis_5_early_claims.png")
-    print("  - analysis_6_risk_adjusted_value.png")
+    print("  - analysis_6_policy_profitability.png")
     print("  - analysis_7_state_claims.png")
     print("  - analysis_8_bind_vs_claims.png")
     
