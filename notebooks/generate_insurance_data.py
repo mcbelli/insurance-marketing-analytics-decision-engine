@@ -4,7 +4,7 @@ Synthetic Marketing & Sales Data Generator for Insure Co.
 Generates realistic synthetic data representing marketing and sales performance
 for a national insurance company across multiple channels and products.
 
-Author: [Your Name]
+Author: Michael Belli
 Created for portfolio demonstration purposes.
 """
 
@@ -165,7 +165,7 @@ CONFIG = {
     'end_date': '2025-12-31',
 
     # Target lead volume
-    'total_leads': 100_000,
+    'total_leads': 20_000,
 
     # Products
     'products': ['Health', 'Life', 'Property_Casualty'],
@@ -249,7 +249,7 @@ CONFIG = {
     },
 
     # Email campaign settings
-    'email_list_size': 20_000,
+    'email_list_size': 2_000,
     'email_list_overlap': 0.75,  # 75% overlap year to year
     'email_conversion_rate': 0.005,  # 0.5%
     'emails_per_year': 26,  # Every other week
@@ -1061,8 +1061,9 @@ def generate_all_data(output_dir: str = '.'):
 if __name__ == "__main__":
     import os
 
-    # Create output directory
-    output_dir = "insure_co_data"
+    # Create output directory, making sure it's relative
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_dir = os.path.join(script_dir, "insure_co_data")
     os.makedirs(output_dir, exist_ok=True)
 
     # Generate all data
