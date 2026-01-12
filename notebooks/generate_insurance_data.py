@@ -249,7 +249,7 @@ CONFIG = {
     },
 
     # Email campaign settings
-    'email_list_size': 2_000,
+    'email_list_size': 10_000,
     'email_list_overlap': 0.75,  # 75% overlap year to year
     'email_conversion_rate': 0.005,  # 0.5%
     'emails_per_year': 26,  # Every other week
