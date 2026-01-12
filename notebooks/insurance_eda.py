@@ -524,7 +524,7 @@ def analysis_6_policy_profitability(leads):
     unprofitable, it's not a good investment.
     """
     print("\n" + "="*70)
-    print("ANALYSIS 6: Risk-Adjusted Policy Value by Channel")
+    print("ANALYSIS 6: Policy Profitability by Channel")
     print("="*70)
     
     sold = leads[leads['sold_date'].notna()].copy()
@@ -631,8 +631,8 @@ def analysis_7_state_claims_map(leads):
     Create a visualization of claim frequency and loss ratios by state.
     
     WHY THIS MATTERS:
-    Geographic risk concentration is critical in insurance. States like Florida
-    (hurricanes), Texas (hail), and California (wildfires) have distinct risk
+    Geographic profitability is critical in insurance. States like Florida
+    (hurricanes), Texas (hail), and California (wildfires) have distinct net revenue
     profiles that affect pricing and profitability.
     """
     print("\n" + "="*70)
@@ -692,9 +692,9 @@ def analysis_7_state_claims_map(leads):
     colors = []
     for _, row in sorted_states.iterrows():
         if row['actual_loss_ratio'] > loss_ratio_mean + loss_ratio_std:
-            colors.append('#e74c3c')  # Red for high risk
+            colors.append('#e74c3c')  # Red for high loss
         elif row['actual_loss_ratio'] < loss_ratio_mean - loss_ratio_std:
-            colors.append('#2ecc71')  # Green for low risk
+            colors.append('#2ecc71')  # Green for low loss
         else:
             colors.append('#3498db')  # Blue for normal
     
@@ -702,7 +702,7 @@ def analysis_7_state_claims_map(leads):
     axes[0].barh(sorted_states.index, sorted_states['actual_loss_ratio'], color=colors, alpha=0.8)
     axes[0].axvline(x=100, color='black', linestyle='--', linewidth=2, label='Break-even (100%)')
     axes[0].axvline(x=loss_ratio_mean, color='gray', linestyle=':', alpha=0.7, label=f'Mean ({loss_ratio_mean:.0f}%)')
-    axes[0].set_title('Loss Ratio by State\n(Red = High Risk, Green = Low Risk)')
+    axes[0].set_title('Loss Ratio by State\n(Red = High Loss, Green = Low Loss)')
     axes[0].set_xlabel('Loss Ratio (%)')
     axes[0].legend(loc='lower right')
     

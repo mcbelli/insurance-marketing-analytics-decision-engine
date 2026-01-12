@@ -229,9 +229,9 @@ CONFIG = {
 
     # Base claim probability (annual) - will be modified by demographics and channel
     'base_claim_rate': {
-        'Health': 0.35,  # Health has frequent claims
-        'Life': 0.008,  # Life claims are rare (death)
-        'Property_Casualty': 0.12,  # P&C moderate frequency
+        'Health': 0.2,  # Health has frequent claims
+        'Life': 0.005,  # Life claims are rare (death)
+        'Property_Casualty': 0.08,  # P&C moderate frequency
     },
 
     # Average claim severity by product
