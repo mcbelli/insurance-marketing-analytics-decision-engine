@@ -560,43 +560,59 @@ def analysis_6_policy_profitability(leads):
               f"${row['expected_value']:>9,.0f}")
     
     # Visualization
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    # Visualization
+    fig, axes = plt.subplots(1, 3, figsize=(16, 5))
     
     channels = ['paid_search', 'paid_social', 'email']
     colors = [CHANNEL_COLORS[c] for c in channels]
     
-    # Expected value by channel
+    # CAC calculation
+    cpl_estimates = {'paid_search': 54, 'paid_social': 34, 'email': 8}
+    conv_rates = {'paid_search': 0.09, 'paid_social': 0.072, 'email': 0.043}
+    
+    cac_values = [cpl_estimates[c] / conv_rates[c] for c in channels]
     exp_values = [channel_value.loc[c, 'expected_value'] for c in channels]
+    roi_values = [(exp_values[i] / cac_values[i]) * 100 for i in range(len(channels))]
+    profit_per_dollar = [exp_values[i] / cac_values[i] for i in range(len(channels))]
+    
+    # Chart 1: Average Policy Profitability
     bars = axes[0].bar(channels, exp_values, color=colors, edgecolor='black', linewidth=1.5)
-    axes[0].set_title('Average Policy Profitability by Channel\n'
-                      '(Expected Value = Total Premium − Expected Claims)', fontsize=12)
-    axes[0].set_ylabel('Expected Value ($)')
+    axes[0].set_title('Average Policy Profitability\n(Total Premium − Total Claims)')
+    axes[0].set_ylabel('Profit per Policy ($)')
     axes[0].set_xlabel('Marketing Channel')
-    axes[0].axhline(y=0, color='red', linestyle='--', alpha=0.7)
+    axes[0].set_ylim(bottom=0)
     axes[0].yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
     
     for bar, val in zip(bars, exp_values):
-        color = 'green' if val > 0 else 'red'
         axes[0].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 100, 
-                    f'${val:,.0f}', ha='center', fontweight='bold', color=color)
+                    f'${val:,.0f}', ha='center', fontweight='bold')
+    axes[0].set_ylim(top=axes[0].get_ylim()[1] * 1.15)
     
-    # Stacked bar: Premium vs Claims by channel
-    premiums = [channel_value.loc[c, 'total_premium'] for c in channels]
-    claims = [channel_value.loc[c, 'total_claim_amount'] for c in channels]
-    
-    x = np.arange(len(channels))
-    width = 0.35
-    
-    bars1 = axes[1].bar(x - width/2, premiums, width, label='Avg Total Premium', color='#2ecc71', alpha=0.8)
-    bars2 = axes[1].bar(x + width/2, claims, width, label='Avg Total Claims', color='#e74c3c', alpha=0.8)
-    
-    axes[1].set_title('Average Premium vs Claims by Channel')
-    axes[1].set_ylabel('Amount ($)')
+    # Chart 2: Customer Acquisition Cost
+    bars = axes[1].bar(channels, cac_values, color=colors, edgecolor='black', linewidth=1.5)
+    axes[1].set_title('Customer Acquisition Cost\n(CPL ÷ Conversion Rate)')
+    axes[1].set_ylabel('CAC ($)')
     axes[1].set_xlabel('Marketing Channel')
-    axes[1].set_xticks(x)
-    axes[1].set_xticklabels(channels)
-    axes[1].legend()
+    axes[1].set_ylim(bottom=0)
     axes[1].yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
+    
+    for bar, val in zip(bars, cac_values):
+        axes[1].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 10, 
+                    f'${val:,.0f}', ha='center', fontweight='bold')
+    axes[1].set_ylim(top=axes[1].get_ylim()[1] * 1.15)
+    
+    # Chart 3: Profit per Marketing Dollar (ROI)
+    bars = axes[2].bar(channels, profit_per_dollar, color=colors, edgecolor='black', linewidth=1.5)
+    axes[2].set_title('Profit per Marketing Dollar\n(Policy Profit ÷ CAC)')
+    axes[2].set_ylabel('$ Profit per $1 Spent')
+    axes[2].set_xlabel('Marketing Channel')
+    axes[2].set_ylim(bottom=0)
+    axes[2].yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:.2f}'))
+    
+    for bar, val in zip(bars, profit_per_dollar):
+        axes[2].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1, 
+                    f'${val:.2f}', ha='center', fontweight='bold')
+    axes[2].set_ylim(top=axes[2].get_ylim()[1] * 1.15)
     
     plt.tight_layout()
     plt.savefig('analysis_6_policy_profitability.png', dpi=150, bbox_inches='tight')
@@ -616,9 +632,9 @@ def analysis_6_policy_profitability(leads):
         print(f"  {channel}: CAC=${cac:.0f}, Exp.Value=${exp_val:,.0f}, "
               f"Net=${net_value:,.0f}, ROI={roi:.0f}%")
     
-    print("\n💡 INSIGHT: Despite higher CPL, paid_search delivers the highest profit")
-    print("   per policy. Email's low CPL is offset by poor policy economics,")
-    print("   making it potentially unprofitable on a profitability basis.")
+    print("\n💡 INSIGHT: Budget allocation should optimize profit per marketing dollar,")
+    print("   not profit per policy. Shift spend toward the channel with highest ROI")
+    print("   to maximize total profit from a fixed marketing budget.")
     
     return channel_value
 
