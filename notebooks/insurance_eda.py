@@ -491,6 +491,7 @@ def analysis_5_early_claims_by_channel(leads):
     axes[2].set_title('CPL vs Early Claim Rate\n(Adverse Selection Evidence)')
     axes[2].set_xlabel('Cost Per Lead ($)')
     axes[2].set_ylabel('Early Claim Rate (%)')
+    axes[2].set_ylim(bottom=0)
     
     # Add trend line
     z = np.polyfit(cpl_values, early_claims, 1)
