@@ -1,0 +1,127 @@
+======================================================================
+MARKETING MIX MODEL - MULTI-MODEL COMPARISON
+======================================================================
+
+
+1. MODEL FIT COMPARISON (R-squared)
+--------------------------------------------------
+Channel              Hill          Log     Bayesian
+--------------------------------------------------
+search             0.062       0.062       0.061
+social             0.034       0.033       0.032
+email              0.048       0.042       0.043
+
+
+2. PARAMETER ESTIMATES
+--------------------------------------------------
+
+SEARCH
+
+  Hill Model:
+    K (saturation):          216,174 (+/- 389,201)
+    S (half-sat):              2,794 (+/- 6,578)
+    beta (shape):              1.557 (+/- 2.808)
+
+  Log Model:
+    a (scale):               204,642 (+/- 308,026)
+    b (shape):                 4,050 (+/- 7,920)
+
+  Bayesian Model:
+    K (saturation):          376,843 (+/- 146,458)
+    S (half-sat):              6,378 (+/- 3,315)
+    beta (shape):              1.144 (+/- 0.280)
+    K 94% CI:           [173,834, 668,386]
+    S 94% CI:           [1,805, 12,390]
+    beta 94% CI:        [0.58, 1.65]
+
+SOCIAL
+
+  Hill Model:
+    K (saturation):          103,732 (+/- 119,115)
+    S (half-sat):              1,027 (+/- 1,283)
+    beta (shape):              1.816 (+/- 3.298)
+
+  Log Model:
+    a (scale):                69,884 (+/- 91,230)
+    b (shape):                   902 (+/- 1,811)
+
+  Bayesian Model:
+    K (saturation):          208,679 (+/- 80,941)
+    S (half-sat):              2,969 (+/- 1,693)
+    beta (shape):              1.069 (+/- 0.331)
+    K 94% CI:           [88,983, 358,148]
+    S 94% CI:           [558, 6,130]
+    beta 94% CI:        [0.40, 1.65]
+
+EMAIL
+
+  Hill Model:
+    K (saturation):           72,611 (+/- 72,808)
+    S (half-sat):                312 (+/- 190)
+    beta (shape):              3.000 (+/- 6.286)
+
+  Log Model:
+    a (scale):               128,052 (+/- 465,925)
+    b (shape):                   868 (+/- 3,811)
+
+  Bayesian Model:
+    K (saturation):          149,615 (+/- 55,638)
+    S (half-sat):                738 (+/- 359)
+    beta (shape):              1.163 (+/- 0.395)
+    K 94% CI:           [72,024, 266,115]
+    S 94% CI:           [185, 1,432]
+    beta 94% CI:        [0.39, 1.84]
+
+
+3. CURRENT PERFORMANCE
+--------------------------------------------------
+search       Spend: $     445,758  Profit: $  11,119,159  ROI:   24.9x
+social       Spend: $     212,555  Profit: $   7,064,467  ROI:   33.2x
+email        Spend: $      31,504  Profit: $   2,110,605  ROI:   67.0x
+--------------------------------------------------
+TOTAL        Spend: $     689,817  Profit: $  20,294,231  ROI:   29.4x
+
+
+4. MARGINAL ROI AT CURRENT SPEND LEVELS
+--------------------------------------------------
+Channel         Avg Spend         Hill          Log     Bayesian
+--------------------------------------------------
+search       $     2,821        29.8x        29.8x        31.0x
+social       $     1,345        33.0x        31.1x        34.8x
+email        $       399       119.6x       101.1x        96.2x
+
+
+5. OPTIMAL BUDGET ALLOCATION BY MODEL
+--------------------------------------------------
+Total weekly budget: $4,366
+
+Channel           Current         Hill          Log     Bayesian
+--------------------------------------------------
+search       $     2,821 $     2,430 $     1,127 $     1,959
+social       $     1,345 $     1,311 $       866 $     1,270
+email        $       199 $       625 $     2,372 $     1,136
+
+
+6. KEY INSIGHTS
+--------------------------------------------------
+
+The three models often give DIFFERENT optimal allocations because:
+
+1. HILL assumes a hard saturation ceiling (K parameter)
+   - Can conclude a channel is "saturated" even with limited data
+   - May recommend cutting spend on high-ROI channels if it thinks they're saturated
+
+2. LOG assumes perpetual diminishing returns with no ceiling
+   - Never fully saturates
+   - More conservative about cutting any channel
+
+3. BAYESIAN HILL uses the same form as Hill but:
+   - Uncertainty is explicit (wide CI = "we don't know")
+   - Priors prevent extreme conclusions from sparse data
+   - Compare CI widths across channels to see where data is informative
+
+RECOMMENDATION: When models disagree significantly, trust the data limitations
+over any single model's point estimate. The Bayesian uncertainty bands show
+where you're extrapolating vs. interpolating.
+
+======================================================================

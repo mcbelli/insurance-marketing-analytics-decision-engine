@@ -1,0 +1,105 @@
+======================================================================
+CONSTRAINED MARKETING MIX MODEL
+ROI-Saturation Relationship Enforced
+======================================================================
+
+
+CONSTRAINT APPLIED:
+--------------------------------------------------
+
+The model enforces that channels with higher average ROI are further
+from saturation. This encodes the belief that high ROI indicates
+untapped potential (operating on steep part of response curve).
+
+Mathematically: If ROI_i > ROI_j, then (current_spend_i / S_i) < (current_spend_j / S_j)
+
+
+
+1. CHANNEL ROI RANKING
+--------------------------------------------------
+  1. email        67.0x average ROI
+  2. social       33.2x average ROI
+  3. search       24.9x average ROI
+
+
+2. SATURATION ANALYSIS
+--------------------------------------------------
+Channel         Avg ROI    Current $   S (unconstr)     S (constr)   Sat Prox
+----------------------------------------------------------------------
+email              67.0x $       199 $         312 $         308      0.647
+social             33.2x $     1,345 $       1,027 $       1,801      0.747
+search             24.9x $     2,821 $       2,794 $       3,332      0.847
+
+(Sat Prox = current_spend / S; lower = further from saturation)
+Constraint satisfied: 0.847 > 0.747 > 0.647
+
+
+3. PARAMETER COMPARISON
+--------------------------------------------------
+
+SEARCH
+  Unconstrained:
+    K = $     216,174
+    S = $       2,794
+    beta =      1.557
+    R2 =      0.062
+  Constrained:
+    K = $     245,719
+    S = $       3,332
+    beta =      1.394
+    R2 =      0.062
+
+SOCIAL
+  Unconstrained:
+    K = $     103,732
+    S = $       1,027
+    beta =      1.816
+    R2 =      0.034
+  Constrained:
+    K = $     153,564
+    S = $       1,801
+    beta =      1.160
+    R2 =      0.033
+
+EMAIL
+  Unconstrained:
+    K = $      72,611
+    S = $         312
+    beta =      3.000
+    R2 =      0.048
+  Constrained:
+    K = $      71,806
+    S = $         308
+    beta =      3.000
+    R2 =      0.048
+
+
+4. OPTIMAL BUDGET ALLOCATION
+--------------------------------------------------
+Total weekly budget: $4,366
+
+Channel           Current      Optimal       Change   Marginal ROI
+--------------------------------------------------------------
+search       $     2,821 $     2,457        -$365          33.3x
+social       $     1,345 $     1,286         -$59          33.3x
+email        $       199 $       623        +$424          33.3x
+
+
+5. KEY INSIGHT
+--------------------------------------------------
+
+With the ROI-saturation constraint, the model now believes:
+
+- EMAIL (highest ROI at 67x):
+  Operating at 64.7% of half-saturation
+  Has significant room to scale
+
+- SEARCH (lowest ROI at 25x):
+  Operating at 84.7% of half-saturation
+  Already approaching diminishing returns
+
+This aligns business intuition (high ROI = untapped potential) with
+the mathematical model, preventing the unconstrained model from
+incorrectly concluding that high-ROI channels are saturated.
+
+======================================================================

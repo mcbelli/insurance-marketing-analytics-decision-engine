@@ -1,0 +1,91 @@
+======================================================================
+MARKETING MIX MODEL - SUMMARY REPORT
+======================================================================
+
+1. MODEL FIT SUMMARY
+--------------------------------------------------
+
+SEARCH
+  Model: Hill Saturation Function
+  Parameters:
+    K (max response):     $     216,174/week
+    S (half-saturation):  $       2,794/week spend
+    beta (shape):                1.557
+  R-squared: 0.062
+  Observations: 133
+
+SOCIAL
+  Model: Hill Saturation Function
+  Parameters:
+    K (max response):     $     103,732/week
+    S (half-saturation):  $       1,027/week spend
+    beta (shape):                1.816
+  R-squared: 0.034
+  Observations: 133
+
+EMAIL
+  Model: Hill Saturation Function
+  Parameters:
+    K (max response):     $      72,611/week
+    S (half-saturation):  $         312/week spend
+    beta (shape):                3.000
+  R-squared: 0.048
+  Observations: 63
+
+
+2. CURRENT PERFORMANCE
+--------------------------------------------------
+Channel         Total Spend   Total Profit        ROI
+--------------------------------------------------
+search       $     445,758 $  11,119,159      24.9x
+social       $     212,555 $   7,064,467      33.2x
+email        $      31,504 $   2,110,605      67.0x
+--------------------------------------------------
+TOTAL        $     689,817 $  20,294,231      29.4x
+
+
+3. SATURATION ANALYSIS
+--------------------------------------------------
+
+SEARCH
+  Maximum achievable profit: $216,174/week
+  Spend for 50% of max:      $2,794/week
+  Spend for 80% of max:      $6,806/week
+  Spend for 90% of max:      $11,457/week
+
+SOCIAL
+  Maximum achievable profit: $103,732/week
+  Spend for 50% of max:      $1,027/week
+  Spend for 80% of max:      $2,204/week
+  Spend for 90% of max:      $3,445/week
+
+EMAIL
+  Maximum achievable profit: $72,611/week
+  Spend for 50% of max:      $312/week
+  Spend for 80% of max:      $495/week
+  Spend for 90% of max:      $649/week
+
+
+4. OPTIMAL BUDGET ALLOCATION
+--------------------------------------------------
+Total weekly budget: $4,366
+
+Channel           Current      Optimal       Change
+--------------------------------------------------
+search       $     2,821 $     2,430        -$391
+social       $     1,345 $     1,311         -$35
+email        $       199 $       625        +$426
+
+Projected profit improvement: $35,880/week
+                              $1,865,742/year
+
+
+5. MARGINAL ROI AT CURRENT SPEND
+--------------------------------------------------
+(How much profit from the next $1,000 in each channel)
+
+  search: $29,825 profit per $1,000 additional spend
+  social: $32,982 profit per $1,000 additional spend
+  email: $179,264 profit per $1,000 additional spend
+
+======================================================================
