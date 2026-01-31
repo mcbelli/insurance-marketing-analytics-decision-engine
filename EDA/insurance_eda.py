@@ -1,17 +1,9 @@
 """
-Insure Co. Exploratory Data Analysis
-=====================================
+Insurance Marketing EDA
+=======================
+Eight exploratory analyses of insurance marketing data.
 
-This EDA demonstrates insurance industry domain knowledge through 8 key analyses:
-
-1. Conversion rates and LTV by credit score tier
-2. Optimal age bands by product for conversion and LTV
-3. Multi-product lead analysis and cross-sell opportunity
-4. Geographic analysis of conversion, LTV, and regulatory impact
-5. Early claim rate by channel (adverse selection analysis)
-6. Average policy profitability by marketing channel
-7. State-level claim frequency and loss ratio map
-8. Bind rate vs. early claims rate (channel profit analysis)
+Produces visualizations saved as EDA_*.png in the EDA folder.
 
 Author: Michael Belli
 """
@@ -19,29 +11,41 @@ Author: Michael Belli
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import warnings
-warnings.filterwarnings('ignore')
+import matplotlib.ticker as mticker
+from pathlib import Path
 
-# Set style for all plots
-plt.style.use('seaborn-v0_8-whitegrid')
-plt.rcParams['figure.figsize'] = (12, 6)
-plt.rcParams['font.size'] = 11
-plt.rcParams['axes.titlesize'] = 14
-plt.rcParams['axes.labelsize'] = 12
+# =============================================================================
+# CONFIGURATION
+# =============================================================================
 
-# Color palettes
-CHANNEL_COLORS = {'paid_search': '#2ecc71', 'paid_social': '#3498db', 'email': '#e74c3c'}
-PRODUCT_COLORS = {'Health': '#9b59b6', 'Life': '#1abc9c', 'Property_Casualty': '#f39c12'}
-CREDIT_COLORS = {'Poor': '#e74c3c', 'Fair': '#f39c12', 'Good': '#3498db', 'Excellent': '#2ecc71'}
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR.parent / 'insure_co_data'
+OUTPUT_DIR = BASE_DIR
+
+# Consistent color palette
+CHANNEL_COLORS = {'paid_search': '#2E86AB', 'paid_social': '#A23B72', 'email': '#F18F01'}
+CHANNEL_LABELS = {'paid_search': 'Paid Search', 'paid_social': 'Paid Social', 'email': 'Email'}
+PRODUCT_COLORS = {'Health': '#4CAF50', 'Life': '#2196F3', 'Property_Casualty': '#FF9800'}
+CREDIT_ORDER = ['Poor', 'Fair', 'Good', 'Excellent']
+CREDIT_COLORS = ['#E57373', '#FFB74D', '#81C784', '#4CAF50']
 
 
-def load_data(data_dir='../insure_co_data'):
+# =============================================================================
+# DATA LOADING
+# =============================================================================
+
+def load_data(data_dir=None):
     """Load all data files."""
+    if data_dir is None:
+        data_dir = DATA_DIR
+    
     print("Loading data...")
-    leads = pd.read_csv(f'{data_dir}/leads.csv', parse_dates=['lead_date', 'qualified_date', 'quote_date', 'binder_date', 'sold_date'])
-    search_spend = pd.read_csv(f'{data_dir}/search_daily_spend.csv', parse_dates=['date'])
-    social_spend = pd.read_csv(f'{data_dir}/social_daily_spend.csv', parse_dates=['date'])
+    leads = pd.read_csv(
+        data_dir / 'leads.csv',
+        parse_dates=['lead_date', 'qualified_date', 'quote_date', 'binder_date', 'sold_date']
+    )
+    search_spend = pd.read_csv(data_dir / 'search_daily_spend.csv', parse_dates=['date'])
+    social_spend = pd.read_csv(data_dir / 'social_daily_spend.csv', parse_dates=['date'])
     
     print(f"  Loaded {len(leads):,} lead-product records")
     print(f"  Sold policies: {leads['sold_date'].notna().sum():,}")
@@ -49,927 +53,522 @@ def load_data(data_dir='../insure_co_data'):
 
 
 # =============================================================================
-# ANALYSIS 1: Conversion Rates and LTV by Credit Score
+# ANALYSIS 1: Credit Score Impact
 # =============================================================================
 
 def analysis_1_credit_score(leads):
-    """
-    Analyze how conversion rates and LTV vary by credit score tier.
+    """Credit score impact on conversion and loss ratio."""
+    print("\n[1/8] Credit Score Impact...")
     
-    WHY THIS MATTERS:
-    Credit-based insurance scores are a major underwriting tool. Better credit
-    correlates with lower claims frequency and higher lifetime value—not just
-    ability to pay premiums.
-    """
-    print("\n" + "="*70)
-    print("ANALYSIS 1: Conversion Rates and LTV by Credit Score Tier")
-    print("="*70)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     
-    credit_order = ['Poor', 'Fair', 'Good', 'Excellent']
+    # Left: Conversion rate by credit score
+    ax = axes[0]
+    credit_conv = leads.groupby('credit_score').agg(
+        total=('lead_id', 'count'),
+        sold=('sold_date', lambda x: x.notna().sum())
+    )
+    credit_conv = credit_conv.reindex(CREDIT_ORDER)
+    credit_conv['conversion_rate'] = credit_conv['sold'] / credit_conv['total'] * 100
     
-    # Calculate metrics by credit score
-    metrics = []
-    for credit in credit_order:
-        subset = leads[leads['credit_score'] == credit]
-        sold = subset[subset['sold_date'].notna()]
-        
-        metrics.append({
-            'credit_score': credit,
-            'total_leads': len(subset),
-            'sold_count': len(sold),
-            'conversion_rate': len(sold) / len(subset) * 100 if len(subset) > 0 else 0,
-            'avg_ltv': sold['ltv'].mean() if len(sold) > 0 else 0,
-            'avg_loss_ratio': sold['loss_ratio'].mean() * 100 if len(sold) > 0 else 0,
-            'early_claim_rate': sold['has_early_claim'].mean() * 100 if len(sold) > 0 else 0,
-        })
+    bars = ax.bar(CREDIT_ORDER, credit_conv['conversion_rate'], color=CREDIT_COLORS, alpha=0.8)
+    for bar, val in zip(bars, credit_conv['conversion_rate']):
+        ax.annotate(f'{val:.1f}%', xy=(bar.get_x() + bar.get_width()/2, bar.get_height()),
+                    xytext=(0, 3), textcoords='offset points', ha='center', va='bottom', fontsize=10)
+    ax.set_xlabel('Credit Score', fontsize=11)
+    ax.set_ylabel('Conversion Rate (%)', fontsize=11)
+    ax.set_title('Conversion Rate by Credit Score', fontweight='bold')
+    ax.grid(True, alpha=0.3, axis='y')
     
-    metrics_df = pd.DataFrame(metrics)
+    # Right: Loss ratio by credit score
+    ax = axes[1]
+    sold = leads[leads['sold_date'].notna()].copy()
+    credit_loss = sold.groupby('credit_score').agg(
+        total_premium=('total_premium', 'sum'),
+        total_claims=('total_claim_amount', 'sum')
+    )
+    credit_loss = credit_loss.reindex(CREDIT_ORDER)
+    credit_loss['loss_ratio'] = credit_loss['total_claims'] / credit_loss['total_premium'] * 100
     
-    # Print summary
-    print("\nKey Metrics by Credit Score:")
-    print("-" * 70)
-    for _, row in metrics_df.iterrows():
-        print(f"{row['credit_score']:10} | Conv Rate: {row['conversion_rate']:5.1f}% | "
-              f"Avg LTV: ${row['avg_ltv']:,.0f} | Loss Ratio: {row['avg_loss_ratio']:5.1f}% | "
-              f"Early Claims: {row['early_claim_rate']:5.1f}%")
-    
-    # Create visualization
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-    
-    colors = [CREDIT_COLORS[c] for c in credit_order]
-    
-    # Conversion rate
-    axes[0].bar(metrics_df['credit_score'], metrics_df['conversion_rate'], color=colors)
-    axes[0].set_title('Conversion Rate by Credit Score')
-    axes[0].set_ylabel('Conversion Rate (%)')
-    axes[0].set_xlabel('Credit Score Tier')
-    
-    # Average LTV
-    axes[1].bar(metrics_df['credit_score'], metrics_df['avg_ltv'], color=colors)
-    axes[1].set_title('Average LTV by Credit Score')
-    axes[1].set_ylabel('Lifetime Value ($)')
-    axes[1].set_xlabel('Credit Score Tier')
-    axes[1].yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
-    
-    # Loss ratio
-    axes[2].bar(metrics_df['credit_score'], metrics_df['avg_loss_ratio'], color=colors)
-    axes[2].set_title('Loss Ratio by Credit Score')
-    axes[2].set_ylabel('Loss Ratio (%)')
-    axes[2].set_xlabel('Credit Score Tier')
-    axes[2].axhline(y=100, color='red', linestyle='--', alpha=0.7, label='Break-even')
-    axes[2].legend()
+    bars = ax.bar(CREDIT_ORDER, credit_loss['loss_ratio'], color=CREDIT_COLORS, alpha=0.8)
+    for bar, val in zip(bars, credit_loss['loss_ratio']):
+        ax.annotate(f'{val:.1f}%', xy=(bar.get_x() + bar.get_width()/2, bar.get_height()),
+                    xytext=(0, 3), textcoords='offset points', ha='center', va='bottom', fontsize=10)
+    ax.set_xlabel('Credit Score', fontsize=11)
+    ax.set_ylabel('Loss Ratio (%)', fontsize=11)
+    ax.set_title('Loss Ratio by Credit Score', fontweight='bold')
+    ax.grid(True, alpha=0.3, axis='y')
     
     plt.tight_layout()
-    plt.savefig('analysis_1_credit_score.png', dpi=150, bbox_inches='tight')
+    plt.savefig(OUTPUT_DIR / 'EDA_credit_score.png', dpi=150, bbox_inches='tight')
     plt.close()
-    
-    print("\n💡 INSIGHT: Better credit scores correlate with higher conversion rates,")
-    print("   higher LTV, and lower loss ratios—validating the use of credit-based")
-    print("   insurance scores in underwriting decisions.")
-    
-    return metrics_df
+    print("  ✓ Saved EDA_credit_score.png")
 
 
 # =============================================================================
-# ANALYSIS 2: Optimal Age Bands by Product
+# ANALYSIS 2: Age Bands by Product
 # =============================================================================
 
 def analysis_2_age_bands(leads):
-    """
-    Find optimal age bands for each product where conversion and LTV are maximized.
+    """Optimal age bands by product."""
+    print("\n[2/8] Age Bands by Product...")
     
-    WHY THIS MATTERS:
-    Age is THE primary rating variable in life and health insurance (mortality
-    and morbidity curves). The optimal age differs by product line, reflecting
-    different risk profiles and purchasing behaviors.
-    """
-    print("\n" + "="*70)
-    print("ANALYSIS 2: Optimal Age Bands by Product")
-    print("="*70)
+    sold = leads[leads['sold_date'].notna()].copy()
     
     # Create age bands
-    leads['age_band'] = pd.cut(leads['age'], bins=[17, 25, 35, 45, 55, 65, 100],
-                               labels=['18-25', '26-35', '36-45', '46-55', '56-65', '65+'])
+    bins = [18, 25, 35, 45, 55, 65, 80]
+    labels = ['18-25', '26-35', '36-45', '46-55', '56-65', '66+']
+    sold['age_band'] = pd.cut(sold['age'], bins=bins, labels=labels, right=True)
     
-    products = ['Health', 'Life', 'Property_Casualty']
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     
-    fig, axes = plt.subplots(2, 3, figsize=(16, 10))
+    # Left: LTV by age band and product
+    ax = axes[0]
+    pivot = sold.groupby(['age_band', 'product'])['ltv'].mean().unstack()
+    pivot.plot(kind='bar', ax=ax, color=[PRODUCT_COLORS[p] for p in pivot.columns], alpha=0.8)
+    ax.set_xlabel('Age Band', fontsize=11)
+    ax.set_ylabel('Average LTV ($)', fontsize=11)
+    ax.set_title('Average LTV by Age Band and Product', fontweight='bold')
+    ax.legend(title='Product')
+    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_xticklabels(labels, rotation=0)
     
-    for i, product in enumerate(products):
-        product_data = leads[leads['product'] == product]
-        
-        # Calculate metrics by age band
-        age_metrics = product_data.groupby('age_band').agg({
-            'lead_id': 'count',
-            'sold_date': lambda x: x.notna().sum(),
-            'ltv': lambda x: x[x.notna()].mean() if x.notna().any() else 0,
-            'loss_ratio': lambda x: x[x.notna()].mean() * 100 if x.notna().any() else 0,
-        }).rename(columns={'lead_id': 'total', 'sold_date': 'sold'})
-        
-        age_metrics['conversion_rate'] = age_metrics['sold'] / age_metrics['total'] * 100
-        
-        print(f"\n{product}:")
-        print("-" * 50)
-        best_conv = age_metrics['conversion_rate'].idxmax()
-        best_ltv = age_metrics['ltv'].idxmax()
-        print(f"  Best conversion: {best_conv} ({age_metrics.loc[best_conv, 'conversion_rate']:.1f}%)")
-        print(f"  Highest LTV: {best_ltv} (${age_metrics.loc[best_ltv, 'ltv']:,.0f})")
-        
-        # Plot conversion rate
-        color = PRODUCT_COLORS[product]
-        axes[0, i].bar(age_metrics.index.astype(str), age_metrics['conversion_rate'], color=color, alpha=0.8)
-        axes[0, i].set_title(f'{product}\nConversion Rate by Age')
-        axes[0, i].set_ylabel('Conversion Rate (%)' if i == 0 else '')
-        axes[0, i].set_xlabel('Age Band')
-        axes[0, i].tick_params(axis='x', rotation=45)
-        
-        # Highlight best age band
-        best_idx = list(age_metrics.index.astype(str)).index(str(best_conv))
-        axes[0, i].patches[best_idx].set_edgecolor('black')
-        axes[0, i].patches[best_idx].set_linewidth(3)
-        
-        # Plot LTV
-        axes[1, i].bar(age_metrics.index.astype(str), age_metrics['ltv'], color=color, alpha=0.8)
-        axes[1, i].set_title(f'{product}\nAverage LTV by Age')
-        axes[1, i].set_ylabel('LTV ($)' if i == 0 else '')
-        axes[1, i].set_xlabel('Age Band')
-        axes[1, i].tick_params(axis='x', rotation=45)
-        axes[1, i].yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
+    # Right: Conversion rate by age band and product
+    ax = axes[1]
+    conv_data = leads.copy()
+    conv_data['age_band'] = pd.cut(conv_data['age'], bins=bins, labels=labels, right=True)
+    conv_data['sold'] = conv_data['sold_date'].notna().astype(int)
+    
+    pivot_conv = conv_data.groupby(['age_band', 'product'])['sold'].mean().unstack() * 100
+    pivot_conv.plot(kind='bar', ax=ax, color=[PRODUCT_COLORS[p] for p in pivot_conv.columns], alpha=0.8)
+    ax.set_xlabel('Age Band', fontsize=11)
+    ax.set_ylabel('Conversion Rate (%)', fontsize=11)
+    ax.set_title('Conversion Rate by Age Band and Product', fontweight='bold')
+    ax.legend(title='Product')
+    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_xticklabels(labels, rotation=0)
     
     plt.tight_layout()
-    plt.savefig('analysis_2_age_bands.png', dpi=150, bbox_inches='tight')
+    plt.savefig(OUTPUT_DIR / 'EDA_age_bands.png', dpi=150, bbox_inches='tight')
     plt.close()
-    
-    print("\n💡 INSIGHT: Each product has different optimal age bands:")
-    print("   - Life Insurance: Middle-aged customers (35-55) have highest LTV")
-    print("   - Health Insurance: Conversion peaks at different ages than LTV")
-    print("   - P&C: More uniform across ages, reflecting different risk dynamics")
-    
-    return leads
+    print("  ✓ Saved EDA_age_bands.png")
 
 
 # =============================================================================
-# ANALYSIS 3: Multi-Product Leads and Cross-Sell
+# ANALYSIS 3: Cross-Sell / Multi-Product
 # =============================================================================
 
 def analysis_3_cross_sell(leads):
-    """
-    Analyze multi-product leads and cross-sell opportunity.
-    
-    WHY THIS MATTERS:
-    Bundled customers have 90%+ retention vs ~80% for single-product customers.
-    Cross-sell is a core profitability and retention lever that every insurance
-    executive obsesses over.
-    """
-    print("\n" + "="*70)
-    print("ANALYSIS 3: Multi-Product Leads and Cross-Sell Opportunity")
-    print("="*70)
+    """Cross-sell and multi-product opportunity."""
+    print("\n[3/8] Cross-Sell Opportunity...")
     
     # Count products per lead
-    products_per_lead = leads.groupby('lead_id').agg({
-        'product': 'count',
-        'sold_date': lambda x: x.notna().sum(),
-        'ltv': lambda x: x[x.notna()].sum(),
-    }).rename(columns={'product': 'products_quoted', 'sold_date': 'products_sold'})
+    lead_products = leads.groupby('lead_id').agg(
+        num_products=('product', 'nunique'),
+        num_sold=('sold_date', lambda x: x.notna().sum()),
+        total_ltv=('ltv', 'sum'),
+        any_sold=('sold_date', lambda x: x.notna().any())
+    )
+    lead_products['product_category'] = lead_products['num_products'].map(
+        {1: 'Single Product', 2: 'Two Products', 3: 'Three Products'}
+    )
     
-    products_per_lead['any_sold'] = products_per_lead['products_sold'] > 0
-    products_per_lead['multi_product'] = products_per_lead['products_quoted'] > 1
-    
-    # Conversion rates by number of products
-    print("\nConversion Analysis by Products Quoted:")
-    print("-" * 50)
-    
-    single_product = products_per_lead[products_per_lead['products_quoted'] == 1]
-    multi_product = products_per_lead[products_per_lead['products_quoted'] > 1]
-    
-    single_conv = single_product['any_sold'].mean() * 100
-    multi_conv = multi_product['any_sold'].mean() * 100
-    
-    print(f"Single-product leads: {len(single_product):,} leads, {single_conv:.1f}% conversion")
-    print(f"Multi-product leads:  {len(multi_product):,} leads, {multi_conv:.1f}% conversion")
-    print(f"\nMulti-product leads convert {multi_conv/single_conv:.2f}x better!")
-    
-    # Cross-sell analysis for sold customers
-    sold_customers = products_per_lead[products_per_lead['products_sold'] > 0]
-    
-    cross_sell_dist = sold_customers['products_sold'].value_counts().sort_index()
-    
-    print("\nProducts Sold per Customer:")
-    print("-" * 50)
-    for num_products, count in cross_sell_dist.items():
-        pct = count / len(sold_customers) * 100
-        avg_ltv = sold_customers[sold_customers['products_sold'] == num_products]['ltv'].mean()
-        print(f"  {num_products} product(s): {count:,} customers ({pct:.1f}%), Avg LTV: ${avg_ltv:,.0f}")
-    
-    # Visualizations
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
     
-    # Conversion comparison
-    conv_data = pd.DataFrame({
-        'Lead Type': ['Single Product', 'Multi-Product'],
-        'Conversion Rate': [single_conv, multi_conv]
-    })
-    bars = axes[0].bar(conv_data['Lead Type'], conv_data['Conversion Rate'], 
-                       color=['#3498db', '#2ecc71'])
-    axes[0].set_title('Conversion Rate: Single vs Multi-Product Leads')
-    axes[0].set_ylabel('Conversion Rate (%)')
-    for bar, val in zip(bars, conv_data['Conversion Rate']):
-        axes[0].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, 
-                    f'{val:.1f}%', ha='center', fontweight='bold')
+    # Left: Conversion rate by number of products interested
+    ax = axes[0]
+    conv_by_prods = lead_products.groupby('product_category')['any_sold'].mean() * 100
+    conv_by_prods = conv_by_prods.reindex(['Single Product', 'Two Products', 'Three Products'])
+    bars = ax.bar(conv_by_prods.index, conv_by_prods.values, 
+                  color=['#90CAF9', '#42A5F5', '#1565C0'], alpha=0.8)
+    for bar, val in zip(bars, conv_by_prods.values):
+        ax.annotate(f'{val:.1f}%', xy=(bar.get_x() + bar.get_width()/2, bar.get_height()),
+                    xytext=(0, 3), textcoords='offset points', ha='center', va='bottom', fontsize=10)
+    ax.set_ylabel('Conversion Rate (%)', fontsize=11)
+    ax.set_title('Conversion Rate by\nProducts Interested', fontweight='bold')
+    ax.grid(True, alpha=0.3, axis='y')
     
-    # Products sold distribution
-    axes[1].bar(cross_sell_dist.index.astype(str), cross_sell_dist.values, color='#9b59b6')
-    axes[1].set_title('Distribution of Products Sold per Customer')
-    axes[1].set_xlabel('Number of Products')
-    axes[1].set_ylabel('Number of Customers')
+    # Center: Average LTV for converted leads
+    ax = axes[1]
+    sold_leads = lead_products[lead_products['any_sold']]
+    ltv_by_prods = sold_leads.groupby('product_category')['total_ltv'].mean()
+    ltv_by_prods = ltv_by_prods.reindex(['Single Product', 'Two Products', 'Three Products'])
+    bars = ax.bar(ltv_by_prods.index, ltv_by_prods.values, 
+                  color=['#90CAF9', '#42A5F5', '#1565C0'], alpha=0.8)
+    for bar, val in zip(bars, ltv_by_prods.values):
+        ax.annotate(f'${val:,.0f}', xy=(bar.get_x() + bar.get_width()/2, bar.get_height()),
+                    xytext=(0, 3), textcoords='offset points', ha='center', va='bottom', fontsize=10)
+    ax.set_ylabel('Average Total LTV ($)', fontsize=11)
+    ax.set_title('Average LTV by\nProducts Interested', fontweight='bold')
+    ax.grid(True, alpha=0.3, axis='y')
     
-    # LTV by products sold
-    ltv_by_products = sold_customers.groupby('products_sold')['ltv'].mean()
-    axes[2].bar(ltv_by_products.index.astype(str), ltv_by_products.values, color='#f39c12')
-    axes[2].set_title('Average LTV by Products Purchased')
-    axes[2].set_xlabel('Number of Products')
-    axes[2].set_ylabel('Total LTV ($)')
-    axes[2].yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
+    # Right: Distribution of products per lead
+    ax = axes[2]
+    prod_dist = lead_products['product_category'].value_counts().reindex(
+        ['Single Product', 'Two Products', 'Three Products'])
+    ax.pie(prod_dist.values, labels=prod_dist.index, autopct='%1.1f%%',
+           colors=['#90CAF9', '#42A5F5', '#1565C0'], startangle=90)
+    ax.set_title('Distribution of\nProducts per Lead', fontweight='bold')
     
     plt.tight_layout()
-    plt.savefig('analysis_3_cross_sell.png', dpi=150, bbox_inches='tight')
+    plt.savefig(OUTPUT_DIR / 'EDA_cross_sell.png', dpi=150, bbox_inches='tight')
     plt.close()
-    
-    print("\n💡 INSIGHT: Multi-product leads convert significantly better and have")
-    print("   higher LTV. This supports investment in cross-sell initiatives and")
-    print("   bundling strategies to improve retention and profitability.")
-    
-    return products_per_lead
+    print("  ✓ Saved EDA_cross_sell.png")
 
 
 # =============================================================================
-# ANALYSIS 4: Geographic Analysis
+# ANALYSIS 4: Geographic Variation
 # =============================================================================
 
 def analysis_4_geographic(leads):
-    """
-    Analyze conversion rates, LTV, and loss ratios by state.
-    
-    WHY THIS MATTERS:
-    Insurance is state-regulated—each state has its own rate approval process,
-    coverage mandates, and competitive dynamics. Florida's P&C looks different
-    (hurricane exposure), some states have compressed margins (heavy regulation).
-    """
-    print("\n" + "="*70)
-    print("ANALYSIS 4: Geographic Analysis")
-    print("="*70)
-    
-    # Calculate metrics by state
-    state_metrics = leads.groupby('state').agg({
-        'lead_id': 'count',
-        'sold_date': lambda x: x.notna().sum(),
-        'ltv': lambda x: x[x.notna()].mean() if x.notna().any() else 0,
-        'loss_ratio': lambda x: x[x.notna()].mean() if x.notna().any() else 0,
-        'has_early_claim': lambda x: x[x.notna()].mean() if x.notna().any() else 0,
-    }).rename(columns={'lead_id': 'total_leads', 'sold_date': 'sold'})
-    
-    state_metrics['conversion_rate'] = state_metrics['sold'] / state_metrics['total_leads'] * 100
-    state_metrics['loss_ratio_pct'] = state_metrics['loss_ratio'] * 100
-    
-    # Filter to states with meaningful volume
-    state_metrics = state_metrics[state_metrics['total_leads'] >= 500].copy()
-    
-    # Top and bottom states
-    print("\nTop 5 States by Conversion Rate:")
-    print("-" * 50)
-    top_conv = state_metrics.nlargest(5, 'conversion_rate')
-    for state, row in top_conv.iterrows():
-        print(f"  {state}: {row['conversion_rate']:.1f}% conversion, "
-              f"${row['ltv']:,.0f} avg LTV, {row['loss_ratio_pct']:.1f}% loss ratio")
-    
-    print("\nBottom 5 States by Conversion Rate:")
-    print("-" * 50)
-    bottom_conv = state_metrics.nsmallest(5, 'conversion_rate')
-    for state, row in bottom_conv.iterrows():
-        print(f"  {state}: {row['conversion_rate']:.1f}% conversion, "
-              f"${row['ltv']:,.0f} avg LTV, {row['loss_ratio_pct']:.1f}% loss ratio")
-    
-    print("\nHighest Loss Ratio States (potential regulatory/risk concerns):")
-    print("-" * 50)
-    high_loss = state_metrics.nlargest(5, 'loss_ratio')
-    for state, row in high_loss.iterrows():
-        print(f"  {state}: {row['loss_ratio_pct']:.1f}% loss ratio, "
-              f"{row['conversion_rate']:.1f}% conversion")
-    
-    # Visualizations
-    fig, axes = plt.subplots(1, 3, figsize=(16, 5))
-    
-    # Sort by conversion rate for visualization
-    sorted_states = state_metrics.sort_values('conversion_rate', ascending=True)
-    
-    # Conversion rate by state (horizontal bar)
-    colors = ['#e74c3c' if x < state_metrics['conversion_rate'].median() else '#2ecc71' 
-              for x in sorted_states['conversion_rate']]
-    axes[0].barh(sorted_states.index, sorted_states['conversion_rate'], color=colors, alpha=0.8)
-    axes[0].set_title('Conversion Rate by State')
-    axes[0].set_xlabel('Conversion Rate (%)')
-    axes[0].axvline(x=state_metrics['conversion_rate'].median(), color='black', 
-                    linestyle='--', alpha=0.5, label='Median')
-    
-    # Scatter: Conversion vs LTV
-    scatter = axes[1].scatter(state_metrics['conversion_rate'], state_metrics['ltv'],
-                              s=state_metrics['total_leads']/50, alpha=0.6, c='#3498db')
-    axes[1].set_title('Conversion Rate vs LTV by State\n(bubble size = lead volume)')
-    axes[1].set_xlabel('Conversion Rate (%)')
-    axes[1].set_ylabel('Average LTV ($)')
-    
-    # Annotate outliers
-    for state, row in state_metrics.iterrows():
-        if row['conversion_rate'] > state_metrics['conversion_rate'].quantile(0.9) or \
-           row['conversion_rate'] < state_metrics['conversion_rate'].quantile(0.1):
-            axes[1].annotate(state, (row['conversion_rate'], row['ltv']), fontsize=8)
-    
-    # Loss ratio distribution
-    sorted_loss = state_metrics.sort_values('loss_ratio_pct', ascending=True)
-    colors = ['#e74c3c' if x > 100 else '#2ecc71' for x in sorted_loss['loss_ratio_pct']]
-    axes[2].barh(sorted_loss.index, sorted_loss['loss_ratio_pct'], color=colors, alpha=0.8)
-    axes[2].set_title('Loss Ratio by State')
-    axes[2].set_xlabel('Loss Ratio (%)')
-    axes[2].axvline(x=100, color='red', linestyle='--', alpha=0.7, label='Break-even')
-    
-    plt.tight_layout()
-    plt.savefig('analysis_4_geographic.png', dpi=150, bbox_inches='tight')
-    plt.close()
-    
-    print("\n💡 INSIGHT: Significant state-level variation suggests regulatory environment,")
-    print("   competitive dynamics, and profit profiles differ by geography. States with")
-    print("   high loss ratios may require pricing adjustments or underwriting changes.")
-    
-    return state_metrics
-
-
-# =============================================================================
-# ANALYSIS 5: Early Claim Rate by Channel
-# =============================================================================
-
-def analysis_5_early_claims_by_channel(leads):
-    """
-    Analyze early claim rates by marketing channel.
-    
-    WHY THIS MATTERS:
-    This demonstrates adverse selection—lower quality channels (cheaper CPL)
-    attract higher-risk customers who file claims sooner. Early claims are
-    a key indicator of adverse selection and underwriting quality.
-    """
-    print("\n" + "="*70)
-    print("ANALYSIS 5: Early Claim Rate by Channel (Adverse Selection)")
-    print("="*70)
+    """Geographic performance variation."""
+    print("\n[4/8] Geographic Variation...")
     
     sold = leads[leads['sold_date'].notna()].copy()
     
-    # Calculate metrics by channel
-    channel_claims = sold.groupby('channel').agg({
-        'lead_id': 'count',
-        'has_claim': 'sum',
-        'has_early_claim': 'sum',
-        'loss_ratio': 'mean',
-        'total_claim_amount': 'sum',
-        'total_premium': 'sum',
-    }).rename(columns={'lead_id': 'policies'})
+    # Aggregate by state
+    state_stats = sold.groupby('state').agg(
+        policies=('lead_id', 'count'),
+        total_premium=('total_premium', 'sum'),
+        total_claims=('total_claim_amount', 'sum'),
+        avg_ltv=('ltv', 'mean')
+    )
+    state_stats['loss_ratio'] = state_stats['total_claims'] / state_stats['total_premium']
     
-    channel_claims['claim_rate'] = channel_claims['has_claim'] / channel_claims['policies'] * 100
-    channel_claims['early_claim_rate'] = channel_claims['has_early_claim'] / channel_claims['policies'] * 100
-    channel_claims['loss_ratio_pct'] = channel_claims['loss_ratio'] * 100
-    channel_claims['actual_loss_ratio'] = channel_claims['total_claim_amount'] / channel_claims['total_premium'] * 100
+    # Filter to states with enough data
+    state_stats = state_stats[state_stats['policies'] >= 20].sort_values('loss_ratio', ascending=False)
     
-    # Channel quality reference
-    channel_quality = {'paid_search': 'High', 'paid_social': 'Medium', 'email': 'Low'}
-    channel_cpl = {'paid_search': '$54', 'paid_social': '$34', 'email': '~$8'}
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     
-    print("\nClaims Analysis by Channel:")
-    print("-" * 70)
-    print(f"{'Channel':<15} {'Quality':<10} {'CPL':<10} {'Policies':<10} {'Early Claim %':<15} {'Loss Ratio':<12}")
-    print("-" * 70)
+    # Left: Loss ratio by state (top 25)
+    ax = axes[0]
+    top_states = state_stats.head(25)
+    colors = ['#E57373' if lr > state_stats['loss_ratio'].median() else '#81C784' 
+              for lr in top_states['loss_ratio']]
+    ax.barh(top_states.index, top_states['loss_ratio'] * 100, color=colors, alpha=0.8)
+    ax.axvline(x=state_stats['loss_ratio'].median() * 100, color='black', linestyle='--', 
+               linewidth=1, label=f'Median: {state_stats["loss_ratio"].median()*100:.1f}%')
+    ax.set_xlabel('Loss Ratio (%)', fontsize=11)
+    ax.set_ylabel('State', fontsize=11)
+    ax.set_title('Loss Ratio by State\n(Highest 25 States)', fontweight='bold')
+    ax.legend()
+    ax.grid(True, alpha=0.3, axis='x')
+    ax.invert_yaxis()
     
-    for channel in ['paid_search', 'paid_social', 'email']:
-        row = channel_claims.loc[channel]
-        print(f"{channel:<15} {channel_quality[channel]:<10} {channel_cpl[channel]:<10} "
-              f"{int(row['policies']):<10} {row['early_claim_rate']:<15.1f} {row['actual_loss_ratio']:<12.1f}%")
+    # Right: LTV by state (top 25 by volume)
+    ax = axes[1]
+    top_vol = state_stats.sort_values('policies', ascending=False).head(25)
+    top_vol = top_vol.sort_values('avg_ltv', ascending=True)
     
-    # Visualization
+    ax.barh(top_vol.index, top_vol['avg_ltv'], color='#42A5F5', alpha=0.8)
+    ax.axvline(x=state_stats['avg_ltv'].median(), color='black', linestyle='--', 
+               linewidth=1, label=f'Median: ${state_stats["avg_ltv"].median():,.0f}')
+    ax.set_xlabel('Average LTV ($)', fontsize=11)
+    ax.set_ylabel('State', fontsize=11)
+    ax.set_title('Average LTV by State\n(Top 25 by Volume)', fontweight='bold')
+    ax.legend()
+    ax.grid(True, alpha=0.3, axis='x')
+    
+    plt.tight_layout()
+    plt.savefig(OUTPUT_DIR / 'EDA_geographic.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print("  ✓ Saved EDA_geographic.png")
+
+
+# =============================================================================
+# ANALYSIS 5: Adverse Selection (Early Claims by Channel)
+# =============================================================================
+
+def analysis_5_early_claims(leads):
+    """Adverse selection by marketing channel."""
+    print("\n[5/8] Adverse Selection...")
+    
+    sold = leads[leads['sold_date'].notna()].copy()
+    
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    
+    # Left: Early claim rate by channel
+    ax = axes[0]
+    channel_claims = sold.groupby('channel').agg(
+        policies=('lead_id', 'count'),
+        early_claims=('has_early_claim', 'sum')
+    )
+    channel_claims['early_claim_rate'] = channel_claims['early_claims'] / channel_claims['policies'] * 100
+    channel_claims = channel_claims.sort_values('early_claim_rate', ascending=True)
+    
+    colors = [CHANNEL_COLORS.get(ch, 'gray') for ch in channel_claims.index]
+    labels = [CHANNEL_LABELS.get(ch, ch) for ch in channel_claims.index]
+    
+    bars = ax.barh(labels, channel_claims['early_claim_rate'], color=colors, alpha=0.8)
+    for bar, val in zip(bars, channel_claims['early_claim_rate']):
+        ax.annotate(f'{val:.1f}%', xy=(bar.get_width(), bar.get_y() + bar.get_height()/2),
+                    xytext=(3, 0), textcoords='offset points', ha='left', va='center', fontsize=10)
+    ax.set_xlabel('Early Claim Rate (%)', fontsize=11)
+    ax.set_title('Year-1 Claim Rate by Channel', fontweight='bold')
+    ax.grid(True, alpha=0.3, axis='x')
+    
+    # Right: Loss ratio by channel
+    ax = axes[1]
+    channel_loss = sold.groupby('channel').agg(
+        total_premium=('total_premium', 'sum'),
+        total_claims=('total_claim_amount', 'sum')
+    )
+    channel_loss['loss_ratio'] = channel_loss['total_claims'] / channel_loss['total_premium'] * 100
+    channel_loss = channel_loss.sort_values('loss_ratio', ascending=True)
+    
+    colors = [CHANNEL_COLORS.get(ch, 'gray') for ch in channel_loss.index]
+    labels = [CHANNEL_LABELS.get(ch, ch) for ch in channel_loss.index]
+    
+    bars = ax.barh(labels, channel_loss['loss_ratio'], color=colors, alpha=0.8)
+    for bar, val in zip(bars, channel_loss['loss_ratio']):
+        ax.annotate(f'{val:.1f}%', xy=(bar.get_width(), bar.get_y() + bar.get_height()/2),
+                    xytext=(3, 0), textcoords='offset points', ha='left', va='center', fontsize=10)
+    ax.set_xlabel('Loss Ratio (%)', fontsize=11)
+    ax.set_title('Loss Ratio by Channel', fontweight='bold')
+    ax.grid(True, alpha=0.3, axis='x')
+    
+    plt.tight_layout()
+    plt.savefig(OUTPUT_DIR / 'EDA_early_claims.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print("  ✓ Saved EDA_early_claims.png")
+
+
+# =============================================================================
+# ANALYSIS 6: Marketing ROI by Channel
+# =============================================================================
+
+def analysis_6_policy_profitability(leads, search_spend, social_spend):
+    """Marketing ROI by channel."""
+    print("\n[6/8] Marketing ROI by Channel...")
+    
+    sold = leads[leads['sold_date'].notna()].copy()
+    
+    # Calculate total spend by channel
+    total_search_spend = search_spend['spend'].sum()
+    total_social_spend = social_spend['spend'].sum()
+    
+    # Estimate email spend from CPL ($8) × number of email leads
+    email_leads_count = len(leads[leads['channel'] == 'email']['lead_id'].unique())
+    total_email_spend = email_leads_count * 8.0
+    
+    channel_spend = {
+        'paid_search': total_search_spend,
+        'paid_social': total_social_spend,
+        'email': total_email_spend
+    }
+    
+    # Profit by channel
+    channel_profit = sold.groupby('channel')['expected_value'].sum()
+    
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
     
-    channels = ['paid_search', 'paid_social', 'email']
-    colors = [CHANNEL_COLORS[c] for c in channels]
+    # Left: Profit per policy by channel
+    ax = axes[0]
+    profit_per_policy = sold.groupby('channel')['expected_value'].mean()
+    profit_per_policy = profit_per_policy.sort_values(ascending=True)
     
-    # Early claim rate
-    early_claims = [channel_claims.loc[c, 'early_claim_rate'] for c in channels]
-    bars = axes[0].bar(channels, early_claims, color=colors)
-    axes[0].set_title('Early Claim Rate by Channel\n(Claims within first year)')
-    axes[0].set_ylabel('Early Claim Rate (%)')
-    axes[0].set_xlabel('Marketing Channel')
+    colors = [CHANNEL_COLORS.get(ch, 'gray') for ch in profit_per_policy.index]
+    labels = [CHANNEL_LABELS.get(ch, ch) for ch in profit_per_policy.index]
     
-    # Add trend line annotation
-    for bar, val in zip(bars, early_claims):
-        axes[0].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.3, 
-                    f'{val:.1f}%', ha='center', fontweight='bold')
+    bars = ax.barh(labels, profit_per_policy.values, color=colors, alpha=0.8)
+    for bar, val in zip(bars, profit_per_policy.values):
+        ax.annotate(f'${val:,.0f}', xy=(bar.get_width(), bar.get_y() + bar.get_height()/2),
+                    xytext=(3, 0), textcoords='offset points', ha='left', va='center', fontsize=10)
+    ax.set_xlabel('Average Profit per Policy ($)', fontsize=11)
+    ax.set_title('Profit per Policy', fontweight='bold')
+    ax.grid(True, alpha=0.3, axis='x')
     
-    # Loss ratio
-    loss_ratios = [channel_claims.loc[c, 'actual_loss_ratio'] for c in channels]
-    bars = axes[1].bar(channels, loss_ratios, color=colors)
-    axes[1].set_title('Loss Ratio by Channel')
-    axes[1].set_ylabel('Loss Ratio (%)')
-    axes[1].set_xlabel('Marketing Channel')
-    axes[1].axhline(y=100, color='red', linestyle='--', alpha=0.7, label='Break-even')
-    axes[1].legend()
+    # Center: Total marketing spend by channel
+    ax = axes[1]
+    spend_sorted = sorted(channel_spend.items(), key=lambda x: x[1])
+    ch_names = [CHANNEL_LABELS.get(ch, ch) for ch, _ in spend_sorted]
+    ch_vals = [v for _, v in spend_sorted]
+    ch_colors = [CHANNEL_COLORS.get(ch, 'gray') for ch, _ in spend_sorted]
     
-    for bar, val in zip(bars, loss_ratios):
-        axes[1].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1, 
-                    f'{val:.1f}%', ha='center', fontweight='bold')
+    bars = ax.barh(ch_names, ch_vals, color=ch_colors, alpha=0.8)
+    for bar, val in zip(bars, ch_vals):
+        ax.annotate(f'${val:,.0f}', xy=(bar.get_width(), bar.get_y() + bar.get_height()/2),
+                    xytext=(3, 0), textcoords='offset points', ha='left', va='center', fontsize=10)
+    ax.set_xlabel('Total Marketing Spend ($)', fontsize=11)
+    ax.set_title('Marketing Spend by Channel', fontweight='bold')
+    ax.grid(True, alpha=0.3, axis='x')
     
-    # CPL vs Early Claim Rate (showing inverse relationship)
-    cpl_values = [54, 34, 8]
-    axes[2].scatter(cpl_values, early_claims, s=200, c=colors, edgecolors='black', linewidth=2)
-    for i, channel in enumerate(channels):
-        axes[2].annotate(channel, (cpl_values[i], early_claims[i]), 
-                        xytext=(10, 5), textcoords='offset points', fontsize=10)
-    axes[2].set_title('CPL vs Early Claim Rate\n(Adverse Selection Evidence)')
-    axes[2].set_xlabel('Cost Per Lead ($)')
-    axes[2].set_ylabel('Early Claim Rate (%)')
-    axes[2].set_ylim(bottom=0)
+    # Right: ROI (profit per marketing dollar)
+    ax = axes[2]
+    roi_data = {}
+    for ch in channel_spend:
+        if ch in channel_profit.index:
+            roi_data[ch] = channel_profit[ch] / channel_spend[ch]
     
-    # Add trend line
-    z = np.polyfit(cpl_values, early_claims, 1)
-    p = np.poly1d(z)
-    x_line = np.linspace(5, 60, 100)
-    axes[2].plot(x_line, p(x_line), 'r--', alpha=0.5, label='Trend')
-    axes[2].legend()
+    roi_sorted = sorted(roi_data.items(), key=lambda x: x[1])
+    ch_names = [CHANNEL_LABELS.get(ch, ch) for ch, _ in roi_sorted]
+    ch_vals = [v for _, v in roi_sorted]
+    ch_colors = [CHANNEL_COLORS.get(ch, 'gray') for ch, _ in roi_sorted]
+    
+    bars = ax.barh(ch_names, ch_vals, color=ch_colors, alpha=0.8)
+    for bar, val in zip(bars, ch_vals):
+        ax.annotate(f'{val:.1f}x', xy=(bar.get_width(), bar.get_y() + bar.get_height()/2),
+                    xytext=(3, 0), textcoords='offset points', ha='left', va='center', fontsize=10)
+    ax.set_xlabel('ROI (Profit / Spend)', fontsize=11)
+    ax.set_title('Marketing ROI by Channel', fontweight='bold')
+    ax.grid(True, alpha=0.3, axis='x')
     
     plt.tight_layout()
-    plt.savefig('analysis_5_early_claims.png', dpi=150, bbox_inches='tight')
+    plt.savefig(OUTPUT_DIR / 'EDA_policy_profitability.png', dpi=150, bbox_inches='tight')
     plt.close()
-    
-    print("\n💡 INSIGHT: Clear evidence of adverse selection—cheaper channels (email)")
-    print("   have significantly higher early claim rates. Customers who respond to")
-    print("   low-cost marketing may be actively seeking insurance due to anticipated needs.")
-    
-    return channel_claims
+    print("  ✓ Saved EDA_policy_profitability.png")
 
 
 # =============================================================================
-# ANALYSIS 6: Average Policy Profitability by Channel
+# ANALYSIS 7: State-Level Claims
 # =============================================================================
 
-def analysis_6_policy_profitability(leads):
-    """
-    Calculate Expected Value = Premium × Tenure − Claims by channel.
-    
-    WHY THIS MATTERS:
-    This shows the true economic value per policy after accounting for claims
-    risk and tenure. A channel may have low CPL but if the policies are
-    unprofitable, it's not a good investment.
-    """
-    print("\n" + "="*70)
-    print("ANALYSIS 6: Policy Profitability by Channel")
-    print("="*70)
+def analysis_7_state_claims(leads):
+    """State-level claims and loss ratios."""
+    print("\n[7/8] State-Level Claims...")
     
     sold = leads[leads['sold_date'].notna()].copy()
     
-    # Calculate expected value metrics by channel
-    channel_value = sold.groupby('channel').agg({
-        'lead_id': 'count',
-        'annual_premium': 'mean',
-        'expected_tenure_years': 'mean',
-        'total_premium': 'mean',
-        'total_claim_amount': 'mean',
-        'expected_value': 'mean',
-        'loss_ratio': 'mean',
-    }).rename(columns={'lead_id': 'policies'})
+    state_stats = sold.groupby('state').agg(
+        policies=('lead_id', 'count'),
+        total_premium=('total_premium', 'sum'),
+        total_claims=('total_claim_amount', 'sum'),
+        claim_rate=('has_claim', 'mean')
+    )
+    state_stats['loss_ratio'] = state_stats['total_claims'] / state_stats['total_premium']
+    state_stats = state_stats[state_stats['policies'] >= 15]
     
-    # Also calculate by channel AND product
-    channel_product_value = sold.groupby(['channel', 'product']).agg({
-        'expected_value': 'mean',
-        'lead_id': 'count',
-    }).rename(columns={'lead_id': 'policies'})
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     
-    print("\nPolicy Profitability by Channel:")
-    print("-" * 80)
-    print(f"{'Channel':<15} {'Policies':<10} {'Avg Premium':<12} {'Avg Tenure':<12} "
-          f"{'Avg Claims':<12} {'Exp. Value':<12}")
-    print("-" * 80)
+    # Left: Claim rate by state
+    ax = axes[0]
+    top_claim = state_stats.sort_values('claim_rate', ascending=False).head(20)
     
-    for channel in ['paid_search', 'paid_social', 'email']:
-        row = channel_value.loc[channel]
-        print(f"{channel:<15} {int(row['policies']):<10} ${row['annual_premium']:>9,.0f} "
-              f"{row['expected_tenure_years']:>10.1f}yr ${row['total_claim_amount']:>9,.0f} "
-              f"${row['expected_value']:>9,.0f}")
+    colors = ['#E57373' if cr > state_stats['claim_rate'].median() else '#81C784' 
+              for cr in top_claim['claim_rate']]
+    ax.barh(top_claim.index, top_claim['claim_rate'] * 100, color=colors, alpha=0.8)
+    ax.axvline(x=state_stats['claim_rate'].median() * 100, color='black', linestyle='--',
+               linewidth=1, label=f'Median: {state_stats["claim_rate"].median()*100:.1f}%')
+    ax.set_xlabel('Claim Rate (%)', fontsize=11)
+    ax.set_ylabel('State', fontsize=11)
+    ax.set_title('Claim Rate by State (Top 20)', fontweight='bold')
+    ax.legend()
+    ax.grid(True, alpha=0.3, axis='x')
+    ax.invert_yaxis()
     
-    # Visualization
-    # Visualization
-    fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+    # Right: Loss ratio distribution
+    ax = axes[1]
+    ax.hist(state_stats['loss_ratio'] * 100, bins=20, color='#42A5F5', alpha=0.8, edgecolor='white')
+    ax.axvline(x=state_stats['loss_ratio'].median() * 100, color='red', linestyle='--',
+               linewidth=2, label=f'Median: {state_stats["loss_ratio"].median()*100:.1f}%')
     
-    channels = ['paid_search', 'paid_social', 'email']
-    colors = [CHANNEL_COLORS[c] for c in channels]
+    # Highlight high-risk states
+    high_risk = state_stats[state_stats['loss_ratio'] > state_stats['loss_ratio'].quantile(0.9)]
+    if len(high_risk) > 0:
+        ax.axvline(x=state_stats['loss_ratio'].quantile(0.9) * 100, color='orange', linestyle='--',
+                   linewidth=1, label=f'90th percentile ({len(high_risk)} states above)')
     
-    # CAC calculation
-    cpl_estimates = {'paid_search': 54, 'paid_social': 34, 'email': 8}
-    conv_rates = {'paid_search': 0.09, 'paid_social': 0.072, 'email': 0.043}
-    
-    cac_values = [cpl_estimates[c] / conv_rates[c] for c in channels]
-    exp_values = [channel_value.loc[c, 'expected_value'] for c in channels]
-    roi_values = [(exp_values[i] / cac_values[i]) * 100 for i in range(len(channels))]
-    profit_per_dollar = [exp_values[i] / cac_values[i] for i in range(len(channels))]
-    
-    # Chart 1: Average Policy Profitability
-    bars = axes[0].bar(channels, exp_values, color=colors, edgecolor='black', linewidth=1.5)
-    axes[0].set_title('Average Policy Profitability\n(Total Premium − Total Claims)')
-    axes[0].set_ylabel('Profit per Policy ($)')
-    axes[0].set_xlabel('Marketing Channel')
-    axes[0].set_ylim(bottom=0)
-    axes[0].yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
-    
-    for bar, val in zip(bars, exp_values):
-        axes[0].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 100, 
-                    f'${val:,.0f}', ha='center', fontweight='bold')
-    axes[0].set_ylim(top=axes[0].get_ylim()[1] * 1.15)
-    
-    # Chart 2: Customer Acquisition Cost
-    bars = axes[1].bar(channels, cac_values, color=colors, edgecolor='black', linewidth=1.5)
-    axes[1].set_title('Customer Acquisition Cost\n(CPL ÷ Conversion Rate)')
-    axes[1].set_ylabel('CAC ($)')
-    axes[1].set_xlabel('Marketing Channel')
-    axes[1].set_ylim(bottom=0)
-    axes[1].yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
-    
-    for bar, val in zip(bars, cac_values):
-        axes[1].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 10, 
-                    f'${val:,.0f}', ha='center', fontweight='bold')
-    axes[1].set_ylim(top=axes[1].get_ylim()[1] * 1.15)
-    
-    # Chart 3: Profit per Marketing Dollar (ROI)
-    bars = axes[2].bar(channels, profit_per_dollar, color=colors, edgecolor='black', linewidth=1.5)
-    axes[2].set_title('Profit per Marketing Dollar\n(Policy Profit ÷ CAC)')
-    axes[2].set_ylabel('$ Profit per $1 Spent')
-    axes[2].set_xlabel('Marketing Channel')
-    axes[2].set_ylim(bottom=0)
-    axes[2].yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:.2f}'))
-    
-    for bar, val in zip(bars, profit_per_dollar):
-        axes[2].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1, 
-                    f'${val:.2f}', ha='center', fontweight='bold')
-    axes[2].set_ylim(top=axes[2].get_ylim()[1] * 1.15)
+    ax.set_xlabel('Loss Ratio (%)', fontsize=11)
+    ax.set_ylabel('Number of States', fontsize=11)
+    ax.set_title('Distribution of Loss Ratios Across States', fontweight='bold')
+    ax.legend()
+    ax.grid(True, alpha=0.3, axis='y')
     
     plt.tight_layout()
-    plt.savefig('analysis_6_policy_profitability.png', dpi=150, bbox_inches='tight')
+    plt.savefig(OUTPUT_DIR / 'EDA_state_claims.png', dpi=150, bbox_inches='tight')
     plt.close()
-    
-    # ROI calculation incorporating CAC
-    print("\nChannel ROI Analysis (incorporating acquisition cost):")
-    print("-" * 60)
-    cpl_estimates = {'paid_search': 54, 'paid_social': 34, 'email': 8}
-    conv_rates = {'paid_search': 0.09, 'paid_social': 0.072, 'email': 0.043}
-    
-    for channel in channels:
-        exp_val = channel_value.loc[channel, 'expected_value']
-        cac = cpl_estimates[channel] / conv_rates[channel]  # Cost to acquire one customer
-        net_value = exp_val - cac
-        roi = (exp_val / cac - 1) * 100
-        print(f"  {channel}: CAC=${cac:.0f}, Exp.Value=${exp_val:,.0f}, "
-              f"Net=${net_value:,.0f}, ROI={roi:.0f}%")
-    
-    print("\n💡 INSIGHT: Budget allocation should optimize profit per marketing dollar,")
-    print("   not profit per policy. Shift spend toward the channel with highest ROI")
-    print("   to maximize total profit from a fixed marketing budget.")
-    
-    return channel_value
+    print("  ✓ Saved EDA_state_claims.png")
 
 
 # =============================================================================
-# ANALYSIS 7: State-Level Claims Map
-# =============================================================================
-
-def analysis_7_state_claims_map(leads):
-    """
-    Create a visualization of claim frequency and loss ratios by state.
-    
-    WHY THIS MATTERS:
-    Geographic profitability is critical in insurance. States like Florida
-    (hurricanes), Texas (hail), and California (wildfires) have distinct net revenue
-    profiles that affect pricing and profitability.
-    """
-    print("\n" + "="*70)
-    print("ANALYSIS 7: State-Level Claims Analysis")
-    print("="*70)
-    
-    sold = leads[leads['sold_date'].notna()].copy()
-    
-    # Calculate state metrics
-    state_claims = sold.groupby('state').agg({
-        'lead_id': 'count',
-        'has_claim': 'mean',
-        'has_early_claim': 'mean',
-        'total_claim_amount': 'sum',
-        'total_premium': 'sum',
-        'loss_ratio': 'mean',
-    }).rename(columns={'lead_id': 'policies'})
-    
-    state_claims['claim_frequency'] = state_claims['has_claim'] * 100
-    state_claims['early_claim_freq'] = state_claims['has_early_claim'] * 100
-    state_claims['actual_loss_ratio'] = state_claims['total_claim_amount'] / state_claims['total_premium'] * 100
-    
-    # Filter to states with sufficient volume
-    state_claims = state_claims[state_claims['policies'] >= 50].copy()
-    
-    # Identify outliers
-    loss_ratio_mean = state_claims['actual_loss_ratio'].mean()
-    loss_ratio_std = state_claims['actual_loss_ratio'].std()
-    
-    state_claims['is_outlier'] = (
-        (state_claims['actual_loss_ratio'] > loss_ratio_mean + 1.5 * loss_ratio_std) |
-        (state_claims['actual_loss_ratio'] < loss_ratio_mean - 1.5 * loss_ratio_std)
-    )
-    
-    high_risk_states = state_claims[state_claims['actual_loss_ratio'] > loss_ratio_mean + loss_ratio_std]
-    low_risk_states = state_claims[state_claims['actual_loss_ratio'] < loss_ratio_mean - loss_ratio_std]
-    
-    print("\nHigh-Risk States (Loss Ratio > Mean + 1 Std Dev):")
-    print("-" * 60)
-    for state, row in high_risk_states.sort_values('actual_loss_ratio', ascending=False).iterrows():
-        print(f"  {state}: Loss Ratio {row['actual_loss_ratio']:.1f}%, "
-              f"Claim Freq {row['claim_frequency']:.1f}%, {int(row['policies'])} policies")
-    
-    print("\nLow-Risk States (Loss Ratio < Mean - 1 Std Dev):")
-    print("-" * 60)
-    for state, row in low_risk_states.sort_values('actual_loss_ratio').iterrows():
-        print(f"  {state}: Loss Ratio {row['actual_loss_ratio']:.1f}%, "
-              f"Claim Freq {row['claim_frequency']:.1f}%, {int(row['policies'])} policies")
-    
-    # Visualization
-    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
-    
-    # Sort by loss ratio for visualization
-    sorted_states = state_claims.sort_values('actual_loss_ratio', ascending=True)
-    
-    # Color by outlier status
-    colors = []
-    for _, row in sorted_states.iterrows():
-        if row['actual_loss_ratio'] > loss_ratio_mean + loss_ratio_std:
-            colors.append('#e74c3c')  # Red for high loss
-        elif row['actual_loss_ratio'] < loss_ratio_mean - loss_ratio_std:
-            colors.append('#2ecc71')  # Green for low loss
-        else:
-            colors.append('#3498db')  # Blue for normal
-    
-    # Loss ratio by state
-    axes[0].barh(sorted_states.index, sorted_states['actual_loss_ratio'], color=colors, alpha=0.8)
-    axes[0].axvline(x=100, color='black', linestyle='--', linewidth=2, label='Break-even (100%)')
-    axes[0].axvline(x=loss_ratio_mean, color='gray', linestyle=':', alpha=0.7, label=f'Mean ({loss_ratio_mean:.0f}%)')
-    axes[0].set_title('Loss Ratio by State\n(Red = High Loss, Green = Low Loss)')
-    axes[0].set_xlabel('Loss Ratio (%)')
-    axes[0].legend(loc='lower right')
-    
-    # Scatter: Claim frequency vs Loss ratio
-    scatter = axes[1].scatter(
-        state_claims['claim_frequency'], 
-        state_claims['actual_loss_ratio'],
-        s=state_claims['policies'] / 2,
-        c=['#e74c3c' if x else '#3498db' for x in state_claims['is_outlier']],
-        alpha=0.6,
-        edgecolors='black',
-        linewidth=0.5
-    )
-    
-    # Annotate outliers
-    for state, row in state_claims[state_claims['is_outlier']].iterrows():
-        axes[1].annotate(state, (row['claim_frequency'], row['actual_loss_ratio']),
-                        xytext=(5, 5), textcoords='offset points', fontsize=9, fontweight='bold')
-    
-    axes[1].axhline(y=100, color='red', linestyle='--', alpha=0.7, label='Break-even')
-    axes[1].set_title('Claim Frequency vs Loss Ratio by State\n(bubble size = policy count, red = outliers)')
-    axes[1].set_xlabel('Claim Frequency (%)')
-    axes[1].set_ylabel('Loss Ratio (%)')
-    axes[1].legend()
-    
-    plt.tight_layout()
-    plt.savefig('analysis_7_state_claims.png', dpi=150, bbox_inches='tight')
-    plt.close()
-    
-    print(f"\n📊 Summary Statistics:")
-    print(f"   Mean Loss Ratio: {loss_ratio_mean:.1f}%")
-    print(f"   Std Dev: {loss_ratio_std:.1f}%")
-    print(f"   High-Risk States: {len(high_risk_states)}")
-    print(f"   Low-Risk States: {len(low_risk_states)}")
-    
-    print("\n💡 INSIGHT: Significant state-level variation in loss ratios indicates")
-    print("   geographic risk concentration. High-risk states may need rate increases,")
-    print("   stricter underwriting, or reduced marketing investment.")
-    
-    return state_claims
-
-
-# =============================================================================
-# ANALYSIS 8: Bind Rate vs Early Claims (Channel Risk)
+# ANALYSIS 8: Bind Rate vs Claims Rate
 # =============================================================================
 
 def analysis_8_bind_vs_claims(leads):
-    """
-    Scatterplot of bind rate vs early claims rate by channel.
+    """Bind rate vs claims rate trade-off."""
+    print("\n[8/8] Bind Rate vs Claims Rate...")
     
-    WHY THIS MATTERS:
-    This tests whether higher-converting channels are also riskier. If there's
-    a negative correlation, it suggests adverse selection isn't overwhelming
-    the business model. If positive, fast-converting leads may be higher risk.
-    """
-    print("\n" + "="*70)
-    print("ANALYSIS 8: Bind Rate vs Early Claims Rate (Channel Risk Analysis)")
-    print("="*70)
+    # Calculate by channel-product combination
+    combos = leads.groupby(['channel', 'product']).agg(
+        total=('lead_id', 'count'),
+        sold=('sold_date', lambda x: x.notna().sum()),
+    ).reset_index()
     
-    # Calculate by channel and product
-    channel_product_metrics = leads.groupby(['channel', 'product']).agg({
-        'lead_id': 'count',
-        'binder_date': lambda x: x.notna().sum(),
-        'sold_date': lambda x: x.notna().sum(),
-        'has_early_claim': lambda x: x[x.notna()].mean() if x.notna().any() else 0,
-        'loss_ratio': lambda x: x[x.notna()].mean() if x.notna().any() else 0,
-    }).rename(columns={'lead_id': 'total_leads', 'binder_date': 'bound', 'sold_date': 'sold'})
+    sold = leads[leads['sold_date'].notna()]
+    claims_by_combo = sold.groupby(['channel', 'product']).agg(
+        claim_rate=('has_claim', 'mean')
+    ).reset_index()
     
-    channel_product_metrics['bind_rate'] = channel_product_metrics['bound'] / channel_product_metrics['total_leads'] * 100
-    channel_product_metrics['early_claim_rate'] = channel_product_metrics['has_early_claim'] * 100
-    channel_product_metrics = channel_product_metrics.reset_index()
+    combos = combos.merge(claims_by_combo, on=['channel', 'product'], how='inner')
+    combos['bind_rate'] = combos['sold'] / combos['total']
     
-    # Also aggregate just by channel
-    channel_metrics = leads.groupby('channel').agg({
-        'lead_id': 'count',
-        'binder_date': lambda x: x.notna().sum(),
-        'has_early_claim': lambda x: x[x.notna()].mean() if x.notna().any() else 0,
-    }).rename(columns={'lead_id': 'total_leads', 'binder_date': 'bound'})
+    fig, ax = plt.subplots(figsize=(8, 6))
     
-    channel_metrics['bind_rate'] = channel_metrics['bound'] / channel_metrics['total_leads'] * 100
-    channel_metrics['early_claim_rate'] = channel_metrics['has_early_claim'] * 100
+    for ch in combos['channel'].unique():
+        mask = combos['channel'] == ch
+        ax.scatter(
+            combos.loc[mask, 'bind_rate'] * 100,
+            combos.loc[mask, 'claim_rate'] * 100,
+            c=CHANNEL_COLORS.get(ch, 'gray'),
+            s=combos.loc[mask, 'total'] / 10,  # Size by volume
+            alpha=0.7,
+            label=CHANNEL_LABELS.get(ch, ch),
+            edgecolors='white',
+            linewidths=0.5
+        )
     
-    print("\nChannel Summary: Bind Rate vs Early Claim Rate")
-    print("-" * 60)
-    for channel in ['paid_search', 'paid_social', 'email']:
-        row = channel_metrics.loc[channel]
-        print(f"  {channel:<15} Bind Rate: {row['bind_rate']:5.1f}%  |  Early Claim Rate: {row['early_claim_rate']:5.1f}%")
+    # Add correlation
+    corr = combos['bind_rate'].astype(float).corr(combos['claim_rate'].astype(float))
     
-    # Calculate correlation
-    correlation = channel_product_metrics['bind_rate'].corr(channel_product_metrics['early_claim_rate'])
-    print(f"\nCorrelation (Bind Rate vs Early Claims): {correlation:.3f}")
-    
-    # Visualization
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-    
-    # Scatter by channel (aggregated)
-    channels = ['paid_search', 'paid_social', 'email']
-    for channel in channels:
-        row = channel_metrics.loc[channel]
-        axes[0].scatter(row['bind_rate'], row['early_claim_rate'], 
-                       s=300, c=CHANNEL_COLORS[channel], label=channel,
-                       edgecolors='black', linewidth=2, zorder=5)
-    
-    # Add trend line
-    x_vals = channel_metrics['bind_rate'].values
-    y_vals = channel_metrics['early_claim_rate'].values
+    # Trend line
+    x_vals = combos['bind_rate'].astype(float).values * 100
+    y_vals = combos['claim_rate'].astype(float).values * 100
     z = np.polyfit(x_vals, y_vals, 1)
     p = np.poly1d(z)
-    x_line = np.linspace(min(x_vals) - 1, max(x_vals) + 1, 100)
-    axes[0].plot(x_line, p(x_line), 'r--', alpha=0.5, label=f'Trend (r={correlation:.2f})')
+    x_range = np.linspace(x_vals.min(), x_vals.max(), 50)
+    ax.plot(x_range, p(x_range), '--', color='gray', alpha=0.5, linewidth=1)
     
-    axes[0].set_title('Bind Rate vs Early Claim Rate by Channel\n'
-                      '(Are higher-converting channels riskier?)')
-    axes[0].set_xlabel('Bind Rate (%)')
-    axes[0].set_ylabel('Early Claim Rate (%)')
-    axes[0].legend()
-    
-    # Scatter by channel AND product
-    for channel in channels:
-        for product in ['Health', 'Life', 'Property_Casualty']:
-            subset = channel_product_metrics[
-                (channel_product_metrics['channel'] == channel) & 
-                (channel_product_metrics['product'] == product)
-            ]
-            if len(subset) > 0:
-                row = subset.iloc[0]
-                marker = {'Health': 'o', 'Life': 's', 'Property_Casualty': '^'}[product]
-                axes[1].scatter(row['bind_rate'], row['early_claim_rate'],
-                               s=150, c=CHANNEL_COLORS[channel], marker=marker,
-                               alpha=0.7, edgecolors='black', linewidth=1)
-    
-    # Create custom legend
-    channel_patches = [mpatches.Patch(color=CHANNEL_COLORS[c], label=c) for c in channels]
-    product_markers = [
-        plt.Line2D([0], [0], marker='o', color='gray', label='Health', markersize=10, linestyle=''),
-        plt.Line2D([0], [0], marker='s', color='gray', label='Life', markersize=10, linestyle=''),
-        plt.Line2D([0], [0], marker='^', color='gray', label='P&C', markersize=10, linestyle=''),
-    ]
-    
-    legend1 = axes[1].legend(handles=channel_patches, loc='upper left', title='Channel')
-    axes[1].add_artist(legend1)
-    axes[1].legend(handles=product_markers, loc='upper right', title='Product')
-    
-    axes[1].set_title('Bind Rate vs Early Claim Rate\n(by Channel and Product)')
-    axes[1].set_xlabel('Bind Rate (%)')
-    axes[1].set_ylabel('Early Claim Rate (%)')
+    ax.set_xlabel('Bind Rate (%)', fontsize=11)
+    ax.set_ylabel('Claim Rate (%)', fontsize=11)
+    ax.set_title(f'Bind Rate vs Claim Rate (r = {corr:.2f})', fontsize=12, fontweight='bold')
+    ax.legend(title='Channel')
+    ax.grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('analysis_8_bind_vs_claims.png', dpi=150, bbox_inches='tight')
+    plt.savefig(OUTPUT_DIR / 'EDA_bind_vs_claims.png', dpi=150, bbox_inches='tight')
     plt.close()
-    
-    # Interpretation
-    if correlation > 0.3:
-        interpretation = "POSITIVE correlation suggests higher-converting channels ARE riskier (adverse selection concern)"
-    elif correlation < -0.3:
-        interpretation = "NEGATIVE correlation suggests higher-converting channels are LOWER risk (good sign)"
-    else:
-        interpretation = "WEAK correlation suggests bind rate and claims risk are relatively independent"
-    
-    print(f"\n💡 INSIGHT: {interpretation}")
-    print("   This relationship is critical for understanding the quality-quantity")
-    print("   tradeoff in lead acquisition strategy.")
-    
-    return channel_product_metrics
+    print("  ✓ Saved EDA_bind_vs_claims.png")
 
 
 # =============================================================================
-# MAIN EXECUTION
+# MAIN
 # =============================================================================
 
-def run_full_eda(data_dir='../insure_co_data'):
-    """Run all 8 analyses and generate summary report."""
+def run_all_analyses():
+    """Run all 8 EDA analyses."""
+    print("=" * 60)
+    print("INSURANCE MARKETING EDA")
+    print("=" * 60)
     
-    print("\n" + "="*70)
-    print("INSURE CO. EXPLORATORY DATA ANALYSIS")
-    print("Insurance Marketing & Risk Analytics")
-    print("="*70)
+    leads, search_spend, social_spend = load_data()
     
-    # Load data
-    leads, search_spend, social_spend = load_data(data_dir)
+    analysis_1_credit_score(leads)
+    analysis_2_age_bands(leads)
+    analysis_3_cross_sell(leads)
+    analysis_4_geographic(leads)
+    analysis_5_early_claims(leads)
+    analysis_6_policy_profitability(leads, search_spend, social_spend)
+    analysis_7_state_claims(leads)
+    analysis_8_bind_vs_claims(leads)
     
-    # Run all analyses
-    results = {}
-    
-    results['credit_score'] = analysis_1_credit_score(leads)
-    results['age_bands'] = analysis_2_age_bands(leads)
-    results['cross_sell'] = analysis_3_cross_sell(leads)
-    results['geographic'] = analysis_4_geographic(leads)
-    results['early_claims'] = analysis_5_early_claims_by_channel(leads)
-    results['profitability'] = analysis_6_policy_profitability(leads)
-    results['state_claims'] = analysis_7_state_claims_map(leads)
-    results['bind_vs_claims'] = analysis_8_bind_vs_claims(leads)
-    
-    # Summary
-    print("\n" + "="*70)
-    print("EDA COMPLETE - EXECUTIVE SUMMARY")
-    print("="*70)
-    
-    print("""
-KEY FINDINGS:
-
-1. CREDIT SCORE IMPACT: Strong correlation between credit tier and both 
-   conversion rate and loss ratio, validating credit-based underwriting.
-
-2. AGE SEGMENTATION: Optimal age bands differ by product, reflecting 
-   different risk/purchasing dynamics across life stages.
-
-3. CROSS-SELL OPPORTUNITY: Multi-product leads convert significantly better
-   and have higher LTV—bundling strategy is validated.
-
-4. GEOGRAPHIC VARIATION: Material state-level differences in loss ratios
-   suggest need for geographic risk pricing.
-
-5. ADVERSE SELECTION: Clear evidence that cheaper acquisition channels
-   attract higher-risk customers with more early claims.
-
-6. CHANNEL ECONOMICS: When accounting for claims, paid search delivers best profitability
-   despite higher CPL; email may be unprofitable.
-
-7. STATE RISK CONCENTRATION: Identified outlier states requiring
-   pricing/underwriting attention.
-
-8. QUALITY-QUANTITY TRADEOFF: Analysis of bind rate vs claims rate reveals
-   the true cost of optimizing for conversion volume.
-
-RECOMMENDATIONS:
-- Shift budget toward paid search despite higher CPL
-- Implement credit-score-based lead prioritization
-- Investigate high-loss-ratio states for rate adequacy
-- Invest in cross-sell/bundling initiatives
-- Consider reducing or eliminating purchased email list
-    """)
-    
-    print(f"\nVisualization files saved:")
-    print("  - analysis_1_credit_score.png")
-    print("  - analysis_2_age_bands.png")
-    print("  - analysis_3_cross_sell.png")
-    print("  - analysis_4_geographic.png")
-    print("  - analysis_5_early_claims.png")
-    print("  - analysis_6_policy_profitability.png")
-    print("  - analysis_7_state_claims.png")
-    print("  - analysis_8_bind_vs_claims.png")
-    
-    return results
+    print("\n" + "=" * 60)
+    print("ALL ANALYSES COMPLETE")
+    print("=" * 60)
+    print(f"\nOutput directory: {OUTPUT_DIR}")
+    print("Files:")
+    for f in sorted(OUTPUT_DIR.glob('EDA_*.png')):
+        print(f"  ✓ {f.name}")
 
 
 if __name__ == "__main__":
-    import os
-
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(script_dir)
-    
-    results = run_full_eda()
+    run_all_analyses()
