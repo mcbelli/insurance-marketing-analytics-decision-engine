@@ -36,7 +36,7 @@ PRODUCT_COLORS = {'Health': '#9b59b6', 'Life': '#1abc9c', 'Property_Casualty': '
 CREDIT_COLORS = {'Poor': '#e74c3c', 'Fair': '#f39c12', 'Good': '#3498db', 'Excellent': '#2ecc71'}
 
 
-def load_data(data_dir='insure_co_data'):
+def load_data(data_dir='../insure_co_data'):
     """Load all data files."""
     print("Loading data...")
     leads = pd.read_csv(f'{data_dir}/leads.csv', parse_dates=['lead_date', 'qualified_date', 'quote_date', 'binder_date', 'sold_date'])
@@ -890,7 +890,7 @@ def analysis_8_bind_vs_claims(leads):
 # MAIN EXECUTION
 # =============================================================================
 
-def run_full_eda(data_dir='insure_co_data'):
+def run_full_eda(data_dir='../insure_co_data'):
     """Run all 8 analyses and generate summary report."""
     
     print("\n" + "="*70)
