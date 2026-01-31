@@ -1,0 +1,92 @@
+{
+  "period1": {
+    "channels": {
+      "search": {
+        "weekly_spend": 2821.2535443037978,
+        "period_spend": 146705.1843037975,
+        "weekly_conversions": 7.38458869915127,
+        "period_conversions": 383.99861235586604,
+        "period_profit": 845686.5668603628,
+        "roi": 5.76453089148583,
+        "avg_profit_per_conversion": 2202.316726281899
+      },
+      "social": {
+        "weekly_spend": 1345.2867721518987,
+        "period_spend": 69954.91215189874,
+        "weekly_conversions": 4.531890980692663,
+        "period_conversions": 235.65833099601846,
+        "period_profit": 720809.2118154534,
+        "roi": 10.303911328632681,
+        "avg_profit_per_conversion": 3058.704560831468
+      },
+      "email": {
+        "weekly_spend": 199.39240506329114,
+        "period_spend": 10368.405063291139,
+        "weekly_conversions": 2.4588136811008283,
+        "period_conversions": 127.85831141724307,
+        "period_profit": 134825.49347975053,
+        "roi": 13.003494043369697,
+        "avg_profit_per_conversion": 1054.4914287173033
+      }
+    },
+    "totals": {
+      "spend": 227028.50151898735,
+      "conversions": 747.5152547691275,
+      "profit": 1701321.2721555666,
+      "roi": 7.493866456292837
+    }
+  },
+  "period2": {
+    "channels": {
+      "search": {
+        "weekly_spend": 2769.6760267599375,
+        "period_spend": 144023.15339151674,
+        "weekly_conversions": 7.236843688865753,
+        "period_conversions": 376.3158718210192,
+        "period_profit": 828766.7388767856,
+        "roi": 5.754399340388291,
+        "avg_profit_per_conversion": 2202.316726281899
+      },
+      "social": {
+        "weekly_spend": 715.4285349825667,
+        "period_spend": 37202.28381909347,
+        "weekly_conversions": 3.547138447704261,
+        "period_conversions": 184.45119928062158,
+        "period_profit": 564181.7244904712,
+        "roi": 15.165244349888917,
+        "avg_profit_per_conversion": 3058.704560831468
+      },
+      "email": {
+        "weekly_spend": 880.8281597764837,
+        "period_spend": 45803.06430837716,
+        "weekly_conversions": 7.537434279107344,
+        "period_conversions": 391.94658251358186,
+        "period_profit": 413304.3117756113,
+        "roi": 9.02350788132793,
+        "avg_profit_per_conversion": 1054.4914287173033
+      }
+    },
+    "totals": {
+      "spend": 227028.50151898735,
+      "conversions": 952.7136536152227,
+      "profit": 1806252.775142868,
+      "roi": 7.956061741401237
+    }
+  },
+  "current_allocation": {
+    "search": 2821.2535443037978,
+    "social": 1345.2867721518987,
+    "email": 199.39240506329114
+  },
+  "optimal_allocation": {
+    "search": 2769.6760267599375,
+    "social": 715.4285349825667,
+    "email": 880.8281597764837
+  },
+  "improvement": {
+    "conversions_change": 205.1983988460952,
+    "conversions_pct": 27.450730608764818,
+    "profit_change": 104931.50298730144,
+    "profit_pct": 6.167647739709602
+  }
+}

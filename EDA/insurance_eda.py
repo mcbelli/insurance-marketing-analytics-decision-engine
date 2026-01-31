@@ -13,7 +13,7 @@ This EDA demonstrates insurance industry domain knowledge through 8 key analyses
 7. State-level claim frequency and loss ratio map
 8. Bind rate vs. early claims rate (channel profit analysis)
 
-Author: [Your Name]
+Author: Michael Belli
 """
 
 import pandas as pd

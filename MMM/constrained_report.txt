@@ -1,0 +1,122 @@
+======================================================================
+CONSTRAINED MARKETING MIX MODEL
+ROI-Saturation Relationship Enforced
+======================================================================
+
+
+ECONOMIC ASSUMPTIONS:
+--------------------------------------------------
+
+Profit is calculated as NPV of policy cash flows:
+
+  Expense ratio:       30%  (operating costs as % of premium)
+  Discount rate:       10%  (annual rate for time value of money)
+
+  Annual profit = Annual premium x (1 - expense ratio) - Annual claims
+  NPV = Annual profit x Annuity factor(discount rate, tenure)
+
+This reduces gross profit by ~55% compared to simple (premium - claims).
+
+
+
+CONSTRAINT APPLIED:
+--------------------------------------------------
+
+The model enforces that channels with higher average ROI are further
+from saturation. This encodes the belief that high ROI indicates
+untapped potential (operating on steep part of response curve).
+
+Mathematically: If ROI_i > ROI_j, then (current_spend_i / S_i) < (current_spend_j / S_j)
+
+
+
+1. CHANNEL ROI RANKING
+--------------------------------------------------
+  1. email        10.7x average ROI
+  2. social       10.0x average ROI
+  3. search        5.7x average ROI
+
+
+2. SATURATION ANALYSIS
+--------------------------------------------------
+Channel         Avg ROI    Current $   S (unconstr)     S (constr)   Sat Prox
+----------------------------------------------------------------------
+email              10.7x $       199 $     106,439 $       6,691      0.030
+social             10.0x $     1,345 $         607 $       1,922      0.700
+search              5.7x $     2,821 $       3,585 $       3,528      0.800
+
+(Sat Prox = current_spend / S; lower = further from saturation)
+Constraint satisfied: 0.800 > 0.700 > 0.030
+
+
+3. PARAMETER COMPARISON (Response = Conversions)
+--------------------------------------------------
+Note: K = max weekly conversions, S = half-saturation spend
+
+SEARCH (Avg profit/conv: $2,202)
+  Unconstrained:
+    K =          18.7 conv/week
+    S = $       3,585
+    beta =      1.796
+    R2 =      0.257
+  Constrained:
+    K =          18.5 conv/week
+    S = $       3,528
+    beta =      1.814
+    R2 =      0.257
+
+SOCIAL (Avg profit/conv: $3,059)
+  Unconstrained:
+    K =           6.2 conv/week
+    S = $         607
+    beta =      1.243
+    R2 =      0.020
+  Constrained:
+    K =          10.2 conv/week
+    S = $       1,922
+    beta =      0.640
+    R2 =      0.020
+
+EMAIL (Avg profit/conv: $1,054)
+  Unconstrained:
+    K =         313.6 conv/week
+    S = $     106,439
+    beta =      0.769
+    R2 =      0.052
+  Constrained:
+    K =          48.3 conv/week
+    S = $       6,691
+    beta =      0.833
+    R2 =      0.052
+
+
+4. OPTIMAL BUDGET ALLOCATION
+--------------------------------------------------
+Total weekly budget: $4,366
+Optimization: Max(Conversions x Avg Profit per Conversion)
+
+Channel           Current      Optimal       Change    Marg Profit
+--------------------------------------------------------------
+search       $     2,821 $     2,770         -$52 $           6
+social       $     1,345 $       715        -$630 $           6
+email        $       199 $       881        +$681 $           6
+
+
+5. KEY INSIGHT
+--------------------------------------------------
+
+With the ROI-saturation constraint, the model now believes:
+
+- EMAIL (highest ROI at 11x):
+  Operating at 3.0% of half-saturation
+  Has significant room to scale
+
+- SEARCH (lowest ROI at 6x):
+  Operating at 80.0% of half-saturation
+  Already approaching diminishing returns
+
+This aligns business intuition (high ROI = untapped potential) with
+the mathematical model, preventing the unconstrained model from
+incorrectly concluding that high-ROI channels are saturated.
+
+======================================================================

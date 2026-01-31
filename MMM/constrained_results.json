@@ -1,0 +1,92 @@
+{
+  "channel_stats": {
+    "search": {
+      "total_spend": 445758.06000000006,
+      "total_conversions": 1149,
+      "total_profit": 2530461.9184979014,
+      "avg_roi": 5.676760883466473,
+      "avg_weekly_spend": 2821.2535443037978,
+      "avg_weekly_conversions": 7.272151898734177,
+      "avg_profit_per_conversion": 2202.316726281899,
+      "roi_rank": 3
+    },
+    "social": {
+      "total_spend": 212555.31,
+      "total_conversions": 692,
+      "total_profit": 2116623.5560953757,
+      "avg_roi": 9.9579895514978,
+      "avg_weekly_spend": 1345.2867721518987,
+      "avg_weekly_conversions": 4.379746835443038,
+      "avg_profit_per_conversion": 3058.704560831468,
+      "roi_rank": 2
+    },
+    "email": {
+      "total_spend": 31504.0,
+      "total_conversions": 321,
+      "total_profit": 338491.74861825444,
+      "avg_roi": 10.744405428461606,
+      "avg_weekly_spend": 199.39240506329114,
+      "avg_weekly_conversions": 2.0316455696202533,
+      "avg_profit_per_conversion": 1054.4914287173033,
+      "roi_rank": 1
+    }
+  },
+  "unconstrained": {
+    "search": {
+      "K": 18.734489683297102,
+      "S": 3585.0582454444084,
+      "beta": 1.7958017440108733,
+      "r2": 0.25684669113858294,
+      "n_obs": 156,
+      "avg_profit_per_conversion": 2202.316726281899
+    },
+    "social": {
+      "K": 6.2383711674336535,
+      "S": 606.5058322239231,
+      "beta": 1.2428213356799303,
+      "r2": 0.02001543522030902,
+      "n_obs": 153,
+      "avg_profit_per_conversion": 3058.704560831468
+    },
+    "email": {
+      "K": 313.5573925652715,
+      "S": 106438.72843890847,
+      "beta": 0.7690777371755826,
+      "r2": 0.052300011356213205,
+      "n_obs": 76,
+      "avg_profit_per_conversion": 1054.4914287173033
+    }
+  },
+  "constrained": {
+    "search": {
+      "K": 18.458516992769752,
+      "S": 3527.528138786664,
+      "beta": 1.8136489084903142,
+      "r2": 0.25684576637467216,
+      "current_spend": 2821.2535443037978,
+      "saturation_proximity": 0.7997820097543438,
+      "pct_of_saturation": 44.43771553553354,
+      "avg_profit_per_conversion": 2202.316726281899
+    },
+    "social": {
+      "K": 10.228033468423023,
+      "S": 1922.4416206081844,
+      "beta": 0.6404959165322144,
+      "r2": 0.019711952116401976,
+      "current_spend": 1345.2867721518987,
+      "saturation_proximity": 0.6997802990377952,
+      "pct_of_saturation": 41.16886749622431,
+      "avg_profit_per_conversion": 3058.704560831468
+    },
+    "email": {
+      "K": 48.345476297425236,
+      "S": 6690.638345991927,
+      "beta": 0.8330023931477014,
+      "r2": 0.052110585325099046,
+      "current_spend": 199.39240506329114,
+      "saturation_proximity": 0.0298017012356883,
+      "pct_of_saturation": 2.8939261995710814,
+      "avg_profit_per_conversion": 1054.4914287173033
+    }
+  }
+}
