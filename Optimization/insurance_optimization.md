@@ -1,6 +1,6 @@
 # Budget Optimization
 
-[← Back to Home](../index.md)
+[← Back to Home](../../mcbelli.github.io/index.md)
 
 ---
 
@@ -31,8 +31,8 @@ Using the fitted response curves from the Marketing Mix Model, we simulate two s
 </td>
 <td width="45%" valign="top">
 
-<a href="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/Optimization/optimization_comparison.png">
-  <img src="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/Optimization/optimization_comparison.png" width="100%">
+<a href="optimization_comparison.png">
+  <img src="optimization_comparison.png" width="100%">
 </a>
 <em>Click to enlarge</em>
 
@@ -44,8 +44,8 @@ Using the fitted response curves from the Marketing Mix Model, we simulate two s
 
 ## Simulation Results
 
-<a href="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/Optimization/Optimization_homepage.png">
-  <img src="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/Optimization/Optimization_homepage.png" width="70%">
+<a href="Optimization_homepage.png">
+  <img src="Optimization_homepage.png" width="70%">
 </a>
 
 | Metric | Period 1 (Current) | Period 2 (Optimal) | Change |
@@ -149,4 +149,4 @@ At the optimal allocation:
 
 ---
 
-[← Back to Home](../index.md) | [Previous: MMM](../MMM/marketing-mix-model.md) | [Next: Business Impact →](../index.md#4-business-impact)
+[← Back to Home](../../mcbelli.github.io/index.md) | [Previous: MMM](../MMM/insurance_marketing-mix-model.md) | [Next: Business Impact →](../../mcbelli.github.io/index.md#4-business-impact)

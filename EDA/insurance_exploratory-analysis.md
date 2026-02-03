@@ -1,6 +1,6 @@
 # Exploratory Data Analysis
 
-[← Back to Home](../index.md)
+[← Back to Home](../../mcbelli.github.io/index.md)
 
 ---
 
@@ -23,8 +23,8 @@ Credit-based insurance scores are a major underwriting tool. This analysis valid
 </td>
 <td width="50%" valign="top">
 
-<a href="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_credit_score.png">
-  <img src="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_credit_score.png" width="100%">
+<a href="EDA_credit_score.png">
+  <img src="EDA_credit_score.png" width="100%">
 </a>
 
 </td>
@@ -51,8 +51,8 @@ Age is the primary rating variable in life and health insurance. The optimal cus
 </td>
 <td width="50%" valign="top">
 
-<a href="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_age_bands.png">
-  <img src="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_age_bands.png" width="100%">
+<a href="EDA_age_bands.png">
+  <img src="EDA_age_bands.png" width="100%">
 </a>
 
 </td>
@@ -76,8 +76,8 @@ Bundled customers have 90%+ retention vs ~80% for single-product. This analysis 
 </td>
 <td width="50%" valign="top">
 
-<a href="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_cross_sell.png">
-  <img src="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_cross_sell.png" width="100%">
+<a href="EDA_cross_sell.png">
+  <img src="EDA_cross_sell.png" width="100%">
 </a>
 
 </td>
@@ -101,8 +101,8 @@ Insurance is state-regulated—each state has different rate approval processes,
 </td>
 <td width="50%" valign="top">
 
-<a href="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_geographic.png">
-  <img src="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_geographic.png" width="100%">
+<a href="EDA_geographic.png">
+  <img src="EDA_geographic.png" width="100%">
 </a>
 
 </td>
@@ -126,8 +126,8 @@ Cheaper acquisition channels attract higher-risk customers. This analysis quanti
 </td>
 <td width="50%" valign="top">
 
-<a href="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_early_claims.png">
-  <img src="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_early_claims.png" width="100%">
+<a href="EDA_early_claims.png">
+  <img src="EDA_early_claims.png" width="100%">
 </a>
 
 </td>
@@ -151,8 +151,8 @@ What matters for budget allocation is **profit per marketing dollar**, not profi
 </td>
 <td width="50%" valign="top">
 
-<a href="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_policy_profitability.png">
-  <img src="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_policy_profitability.png" width="100%">
+<a href="EDA_policy_profitability.png">
+  <img src="EDA_policy_profitability.png" width="100%">
 </a>
 
 </td>
@@ -176,8 +176,8 @@ Identifying geographic risk concentration to inform pricing and underwriting dec
 </td>
 <td width="50%" valign="top">
 
-<a href="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_state_claims.png">
-  <img src="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_state_claims.png" width="100%">
+<a href="EDA_state_claims.png">
+  <img src="EDA_state_claims.png" width="100%">
 </a>
 
 </td>
@@ -201,8 +201,8 @@ Do higher-converting channels produce riskier policies? This tests the quality-q
 </td>
 <td width="50%" valign="top">
 
-<a href="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_bind_vs_claims.png">
-  <img src="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/EDA/EDA_bind_vs_claims.png" width="100%">
+<a href="EDA_bind_vs_claims.png">
+  <img src="EDA_bind_vs_claims.png" width="100%">
 </a>
 
 </td>
@@ -226,4 +226,4 @@ Do higher-converting channels produce riskier policies? This tests the quality-q
 
 ---
 
-[← Back to Home](../index.md) | [Next: Marketing Mix Model →](../MMM/marketing-mix-model.md)
+[← Back to Home](../../mcbelli.github.io/index.md) | [Next: Marketing Mix Model →](../MMM/insurance_marketing-mix-model.md)

@@ -1,6 +1,6 @@
 # Marketing Mix Model
 
-[← Back to Home](../index.md)
+[← Back to Home](../../mcbelli.github.io/index.md)
 
 ---
 
@@ -31,8 +31,8 @@ This separation produces tighter fits because the spend→conversions relationsh
 </td>
 <td width="45%" valign="top">
 
-<a href="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/MMM/constrained_comparison.png">
-  <img src="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/MMM/constrained_comparison.png" width="100%">
+<a href="constrained_comparison.png">
+  <img src="constrained_comparison.png" width="100%">
 </a>
 <em>Click to enlarge</em>
 
@@ -57,8 +57,8 @@ Conversions(Spend) = K × Spend^β / (S^β + Spend^β)
 - **S** = Half-saturation point (spend at which conversions = K/2)
 - **β** = Shape parameter (steepness of the curve)
 
-<a href="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/MMM/MMM_homepage.png">
-  <img src="https://raw.githubusercontent.com/mcbelli/insurance-marketing-analytics-decision-engine/main/MMM/MMM_homepage.png" width="80%">
+<a href="MMM_homepage.png">
+  <img src="MMM_homepage.png" width="80%">
 </a>
 
 ---
@@ -147,4 +147,4 @@ The optimization shifts ~$600/week from social (near half-saturation) to email (
 
 ---
 
-[← Back to Home](../index.md) | [Previous: EDA](../EDA/exploratory-analysis.md) | [Next: Optimization →](../Optimization/optimization.md)
+[← Back to Home](../../mcbelli.github.io/index.md) | [Previous: EDA](../EDA/insurance_exploratory-analysis.md) | [Next: Optimization →](../Optimization/insurance_optimization.md)
