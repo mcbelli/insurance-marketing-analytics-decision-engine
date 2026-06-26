@@ -1,6 +1,9 @@
+---
+---
+
 # Budget Optimization
 
-[← Back to Home](../../mcbelli.github.io/index.md)
+[← Back to Home](../../index.md)
 
 ---
 
@@ -12,21 +15,21 @@ This page documents the budget optimization simulation that compares current all
 
 <table>
 <tr>
-<td width="55%" valign="top">
+<td width="55%" valign="top" markdown="1">
 
-Using the fitted response curves from the Marketing Mix Model, we simulate two scenarios over a 52-week period:
+Using the fitted response curves from the Marketing Mix Model, we simulate two scenarios at the monthly budget level:
 
 **Period 1 (Current):** Historical budget allocation
-- Search: $2,821/week
-- Social: $1,345/week  
-- Email: $199/week
-- **Total: $4,366/week**
+- Search: $17,081/month
+- Social: $6,934/month
+- Email: $1,686/month
+- **Total: $25,701/month**
 
 **Period 2 (Optimal):** Budget reallocated to equalize marginal ROI
-- Search: $2,875/week (+$54)
-- Social: $713/week (-$632)
-- Email: $778/week (+$579)
-- **Total: $4,366/week** (same)
+- Search: $14,167/month (-$2,914)
+- Social: $5,089/month (-$1,845)
+- Email: $6,445/month (+$4,759)
+- **Total: $25,701/month** (same)
 
 </td>
 <td width="45%" valign="top">
@@ -50,64 +53,58 @@ Using the fitted response curves from the Marketing Mix Model, we simulate two s
 
 | Metric | Period 1 (Current) | Period 2 (Optimal) | Change |
 |--------|-------------------|-------------------|--------|
-| Marketing Spend | $227,029 | $227,029 | $0 |
-| Conversions | 746 | 931 | **+185 (+24.8%)** |
-| Profit | $1,699,462 | $1,801,738 | **+$102,277 (+6.0%)** |
-| ROI | 7.5x | 7.9x | +0.5x |
+| Marketing Spend | $308,410 | $308,410 | $0 |
+| Conversions | 957 | 1,079 | **+122 (+12.8%)** |
+| Profit | $3,489,208 | $3,694,210 | **+$205,002 (+5.9%)** |
+| ROI | 11.3x | 12.0x | +0.7x |
 
 ---
 
 ## Why Does Reallocation Work?
 
-The optimization works because **marginal ROI varies across channels**:
+The optimization works because **marginal ROI varies across channels**, depending on where each one sits on its response curve:
 
-| Channel | Current Marginal ROI | At $500 Spend | At $2,000 Spend |
-|---------|---------------------|---------------|-----------------|
-| Email | High (steep curve) | ~$7.70 | ~$3.10 |
-| Social | Medium | ~$8.10 | ~$2.60 |
-| Search | Lower (flatter curve) | ~$4.10 | ~$7.10 |
+- **Email** ($1,686/mo) sits at just **8% of saturation**—on the steep part of its curve, so each additional dollar still buys strong incremental conversions (highest average ROI, 17.9x).
+- **Search** ($17,081/mo) and **Social** ($6,934/mo) are both near **70% of saturation**—on the flattening part of their curves, so additional spend returns progressively less.
 
-At current allocations:
-- **Email** ($199/wk) is on the steep part of its curve—high marginal returns
-- **Social** ($1,345/wk) is past its half-saturation—diminishing returns
-- **Search** ($2,821/wk) is near half-saturation—moderate returns
-
-Moving dollars from social to email captures more conversions per dollar.
+Moving dollars out of the near-saturated channels (search, social) into under-saturated email captures more conversions per dollar.
 
 ---
 
 ## Channel-Level Impact
 
-### Email (Increased from $199 to $778/week)
+### Email (Increased from $1,686 to $6,445/month)
 
 | Metric | Period 1 | Period 2 | Change |
 |--------|----------|----------|--------|
-| Annual Spend | $10,348 | $40,456 | +$30,108 |
-| Conversions | 127 | 391 | +264 |
-| Profit | $133,953 | $412,214 | +$278,261 |
-| ROI | 12.9x | 10.2x | -2.7x |
+| Annual Spend | $20,238 | $77,342 | +$57,104 |
+| Conversions | 156 | 342 | +186 |
+| Profit | $361,863 | $793,154 | +$431,291 |
+| ROI | 17.9x | 10.3x | -7.6x |
 
-Email's ROI *decreases* as we spend more (diminishing returns), but it's still the highest-ROI channel at the new level.
+Email's ROI *decreases* as we spend more (diminishing returns), but it remains strongly profitable even at ~4x the spend—which is exactly why it absorbs most of the reallocated budget.
 
-### Social (Decreased from $1,345 to $713/week)
-
-| Metric | Period 1 | Period 2 | Change |
-|--------|----------|----------|--------|
-| Annual Spend | $69,940 | $37,076 | -$32,864 |
-| Conversions | 298 | 184 | -114 |
-| Profit | $910,989 | $563,164 | -$347,825 |
-| ROI | 13.0x | 15.2x | +2.2x |
-
-Social's ROI *increases* as we spend less (moving back up the curve), but we're reallocating those dollars to a higher-opportunity channel.
-
-### Search (Roughly Flat)
+### Social (Decreased from $6,934 to $5,089/month)
 
 | Metric | Period 1 | Period 2 | Change |
 |--------|----------|----------|--------|
-| Annual Spend | $146,692 | $149,500 | +$2,808 |
-| Conversions | 321 | 356 | +35 |
-| Profit | $707,520 | $826,360 | +$118,840 |
-| ROI | 4.8x | 5.5x | +0.7x |
+| Annual Spend | $83,205 | $61,070 | -$22,135 |
+| Conversions | 303 | 268 | -35 |
+| Profit | $776,990 | $687,400 | -$89,590 |
+| ROI | 9.3x | 11.3x | +2.0x |
+
+Social's ROI *increases* as we spend less (moving back up the curve), but we reallocate those dollars to a higher-opportunity channel.
+
+### Search (Decreased from $17,081 to $14,167/month)
+
+| Metric | Period 1 | Period 2 | Change |
+|--------|----------|----------|--------|
+| Annual Spend | $204,967 | $169,998 | -$34,969 |
+| Conversions | 497 | 468 | -29 |
+| Profit | $2,350,355 | $2,213,656 | -$136,699 |
+| ROI | 11.5x | 13.0x | +1.5x |
+
+Search is the most-saturated channel, so trimming its spend costs few conversions while its ROI improves—freeing budget for email.
 
 ---
 
@@ -119,16 +116,15 @@ The optimal allocation satisfies the **equi-marginal principle**:
 
 If marginal ROI were higher for one channel, we could improve total profit by shifting a dollar from a lower-marginal-ROI channel to it.
 
-At the optimal allocation:
-- Marginal profit (email) ≈ Marginal profit (social) ≈ Marginal profit (search) ≈ $6/dollar
+At the optimal allocation, the marginal profit from one more dollar is equalized across email, social, and search—no further reallocation can improve total profit.
 
 ---
 
 ## Caveats
 
-1. **Model uncertainty**: The response curves have estimation error, especially for channels with limited spend variation.
+1. **Model uncertainty**: The response curves are fit on 36 monthly observations and carry estimation error, especially email's saturation ceiling, which sits well above its observed spend.
 
-2. **Extrapolation risk**: Email is currently at very low spend levels. The model extrapolates its performance at 4x higher spend.
+2. **Extrapolation risk**: Email is currently at very low spend levels. The model extrapolates its performance at ~4x higher spend.
 
 3. **Execution factors**: Can email volume actually scale 4x? Are there list fatigue effects?
 
@@ -143,10 +139,4 @@ At the optimal allocation:
 | File | Description |
 |------|-------------|
 | `Optimization/optimize_budget.py` | Simulation code |
-| `Optimization/optimization_comparison.png` | Channel-level comparison |
-| `Optimization/Optimization_homepage.png` | Summary chart |
-| `Optimization/optimization_results.json` | Simulation results |
-
----
-
-[← Back to Home](../../mcbelli.github.io/index.md) | [Previous: MMM](../MMM/insurance_marketing-mix-model.md) | [Next: Business Impact →](../../mcbelli.github.io/index.md#4-business-impact)
+| `Optimization/op

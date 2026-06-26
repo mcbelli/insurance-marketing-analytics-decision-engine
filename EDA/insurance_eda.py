@@ -279,35 +279,44 @@ def analysis_4_geographic(leads):
 # ANALYSIS 5: Adverse Selection (Early Claims by Channel)
 # =============================================================================
 
-def analysis_5_early_claims(leads):
+def analysis_5_early_claims(leads, search_spend, social_spend):
     """Adverse selection by marketing channel."""
     print("\n[5/8] Adverse Selection...")
     
     sold = leads[leads['sold_date'].notna()].copy()
     
+    # --- Compute CPL by channel (same logic as Analysis 6) ---
+    total_search_spend = search_spend['spend'].sum()
+    total_social_spend = social_spend['spend'].sum()
+    email_leads_count = len(leads[leads['channel'] == 'email']['lead_id'].unique())
+    total_email_spend = pd.read_csv(DATA_DIR / 'email_daily_spend.csv')['spend'].sum()
+
+    channel_spend = {
+        'paid_search': total_search_spend,
+        'paid_social': total_social_spend,
+        'email': total_email_spend
+    }
+    lead_counts = leads.groupby('channel')['lead_id'].nunique()
+    cpl = {ch: channel_spend[ch] / lead_counts[ch] for ch in channel_spend if ch in lead_counts}
+
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-    
-    # Left: Early claim rate by channel
+
+    # Left: CPL by channel
     ax = axes[0]
-    channel_claims = sold.groupby('channel').agg(
-        policies=('lead_id', 'count'),
-        early_claims=('has_early_claim', 'sum')
-    )
-    channel_claims['early_claim_rate'] = channel_claims['early_claims'] / channel_claims['policies'] * 100
-    channel_claims = channel_claims.sort_values('early_claim_rate', ascending=True)
-    
-    colors = [CHANNEL_COLORS.get(ch, 'gray') for ch in channel_claims.index]
-    labels = [CHANNEL_LABELS.get(ch, ch) for ch in channel_claims.index]
-    
-    bars = ax.barh(labels, channel_claims['early_claim_rate'], color=colors, alpha=0.8)
-    for bar, val in zip(bars, channel_claims['early_claim_rate']):
-        ax.annotate(f'{val:.1f}%', xy=(bar.get_width(), bar.get_y() + bar.get_height()/2),
+    cpl_sorted = sorted(cpl.items(), key=lambda x: x[1])
+    ch_names = [CHANNEL_LABELS.get(ch, ch) for ch, _ in cpl_sorted]
+    ch_vals = [v for _, v in cpl_sorted]
+    ch_colors = [CHANNEL_COLORS.get(ch, 'gray') for ch, _ in cpl_sorted]
+
+    bars = ax.barh(ch_names, ch_vals, color=ch_colors, alpha=0.8)
+    for bar, val in zip(bars, ch_vals):
+        ax.annotate(f'${val:,.0f}', xy=(bar.get_width(), bar.get_y() + bar.get_height()/2),
                     xytext=(3, 0), textcoords='offset points', ha='left', va='center', fontsize=10)
-    ax.set_xlabel('Early Claim Rate (%)', fontsize=11)
-    ax.set_title('Year-1 Claim Rate by Channel', fontweight='bold')
+    ax.set_xlabel('Cost per Lead ($)', fontsize=11)
+    ax.set_title('Cost per Lead by Channel', fontweight='bold')
     ax.grid(True, alpha=0.3, axis='x')
-    
-    # Right: Loss ratio by channel
+
+    # Right: Loss ratio by channel (unchanged)
     ax = axes[1]
     channel_loss = sold.groupby('channel').agg(
         total_premium=('total_premium', 'sum'),
@@ -315,10 +324,10 @@ def analysis_5_early_claims(leads):
     )
     channel_loss['loss_ratio'] = channel_loss['total_claims'] / channel_loss['total_premium'] * 100
     channel_loss = channel_loss.sort_values('loss_ratio', ascending=True)
-    
+
     colors = [CHANNEL_COLORS.get(ch, 'gray') for ch in channel_loss.index]
     labels = [CHANNEL_LABELS.get(ch, ch) for ch in channel_loss.index]
-    
+
     bars = ax.barh(labels, channel_loss['loss_ratio'], color=colors, alpha=0.8)
     for bar, val in zip(bars, channel_loss['loss_ratio']):
         ax.annotate(f'{val:.1f}%', xy=(bar.get_width(), bar.get_y() + bar.get_height()/2),
@@ -326,12 +335,11 @@ def analysis_5_early_claims(leads):
     ax.set_xlabel('Loss Ratio (%)', fontsize=11)
     ax.set_title('Loss Ratio by Channel', fontweight='bold')
     ax.grid(True, alpha=0.3, axis='x')
-    
+
     plt.tight_layout()
     plt.savefig(OUTPUT_DIR / 'EDA_early_claims.png', dpi=150, bbox_inches='tight')
     plt.close()
     print("  ✓ Saved EDA_early_claims.png")
-
 
 # =============================================================================
 # ANALYSIS 6: Marketing ROI by Channel
@@ -349,7 +357,7 @@ def analysis_6_policy_profitability(leads, search_spend, social_spend):
     
     # Estimate email spend from CPL ($8) × number of email leads
     email_leads_count = len(leads[leads['channel'] == 'email']['lead_id'].unique())
-    total_email_spend = email_leads_count * 8.0
+    total_email_spend = pd.read_csv(DATA_DIR / 'email_daily_spend.csv')['spend'].sum()
     
     channel_spend = {
         'paid_search': total_search_spend,
@@ -503,7 +511,25 @@ def analysis_8_bind_vs_claims(leads):
     combos['bind_rate'] = combos['sold'] / combos['total']
     
     fig, ax = plt.subplots(figsize=(8, 6))
-    
+    PRODUCT_MARKERS = {'Health': 'o', 'Life': '^', 'Property_Casualty': 's'}
+    for ch in combos['channel'].unique():
+        for prod in combos['product'].unique():
+            mask = (combos['channel'] == ch) & (combos['product'] == prod)
+            if mask.sum() == 0:
+                continue
+            ax.scatter(
+                combos.loc[mask, 'bind_rate'] * 100,
+                combos.loc[mask, 'claim_rate'] * 100,
+                c=CHANNEL_COLORS.get(ch, 'gray'),
+                marker=PRODUCT_MARKERS.get(prod, 'o'),
+                s=combos.loc[mask, 'total'] / 10,
+                alpha=0.7,
+                label=f'{CHANNEL_LABELS.get(ch, ch)} – {prod}',
+                edgecolors='white',
+                linewidths=0.5
+            )
+
+
     for ch in combos['channel'].unique():
         mask = combos['channel'] == ch
         ax.scatter(
@@ -531,7 +557,19 @@ def analysis_8_bind_vs_claims(leads):
     ax.set_xlabel('Bind Rate (%)', fontsize=11)
     ax.set_ylabel('Claim Rate (%)', fontsize=11)
     ax.set_title(f'Bind Rate vs Claim Rate (r = {corr:.2f})', fontsize=12, fontweight='bold')
-    ax.legend(title='Channel')
+    # Channel legend (color)
+    channel_handles = [
+        plt.scatter([], [], c=CHANNEL_COLORS[ch], s=60, label=CHANNEL_LABELS[ch])
+        for ch in CHANNEL_COLORS
+    ]
+    # Product legend (shape)
+    product_handles = [
+        plt.scatter([], [], c='gray', marker=PRODUCT_MARKERS[prod], s=60, label=prod.replace('_', ' '))
+        for prod in PRODUCT_MARKERS
+    ]
+    legend1 = ax.legend(handles=channel_handles, title='Channel', loc='upper left')
+    ax.add_artist(legend1)
+    ax.legend(handles=product_handles, title='Product', loc='lower right')
     ax.grid(True, alpha=0.3)
     
     plt.tight_layout()
@@ -556,7 +594,7 @@ def run_all_analyses():
     analysis_2_age_bands(leads)
     analysis_3_cross_sell(leads)
     analysis_4_geographic(leads)
-    analysis_5_early_claims(leads)
+    analysis_5_early_claims(leads, search_spend, social_spend)
     analysis_6_policy_profitability(leads, search_spend, social_spend)
     analysis_7_state_claims(leads)
     analysis_8_bind_vs_claims(leads)

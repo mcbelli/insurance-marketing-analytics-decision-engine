@@ -32,74 +32,74 @@ Mathematically: If ROI_i > ROI_j, then (current_spend_i / S_i) < (current_spend_
 
 1. CHANNEL ROI RANKING
 --------------------------------------------------
-  1. email        10.7x average ROI
-  2. social       10.0x average ROI
-  3. search        5.7x average ROI
+  1. email        17.1x average ROI
+  2. search       10.0x average ROI
+  3. social        8.6x average ROI
 
 
 2. SATURATION ANALYSIS
 --------------------------------------------------
 Channel         Avg ROI    Current $   S (unconstr)     S (constr)   Sat Prox
 ----------------------------------------------------------------------
-email              10.7x $       199 $     106,439 $       6,691      0.030
-social             10.0x $     1,345 $         607 $       1,922      0.700
-search              5.7x $     2,821 $       3,585 $       3,528      0.800
+email              17.1x $     1,686 $      18,552 $      18,552      0.091
+search             10.0x $    17,081 $       7,260 $       7,637      2.237
+social              8.6x $     6,934 $       5,453 $       2,967      2.337
 
 (Sat Prox = current_spend / S; lower = further from saturation)
-Constraint satisfied: 0.800 > 0.700 > 0.030
+Constraint satisfied: 2.337 > 2.237 > 0.091
 
 
 3. PARAMETER COMPARISON (Response = Conversions)
 --------------------------------------------------
 Note: K = max weekly conversions, S = half-saturation spend
 
-SEARCH (Avg profit/conv: $2,202)
+SEARCH (Avg profit/conv: $4,727)
   Unconstrained:
-    K =          18.7 conv/week
-    S = $       3,585
-    beta =      1.796
-    R2 =      0.257
+    K =          44.3 conv/week
+    S = $       7,260
+    beta =      3.000
+    R2 =      0.572
   Constrained:
-    K =          18.5 conv/week
-    S = $       3,528
-    beta =      1.814
-    R2 =      0.257
+    K =          45.1 conv/week
+    S = $       7,637
+    beta =      3.000
+    R2 =      0.567
 
-SOCIAL (Avg profit/conv: $3,059)
+SOCIAL (Avg profit/conv: $2,561)
   Unconstrained:
-    K =           6.2 conv/week
-    S = $         607
-    beta =      1.243
-    R2 =      0.020
+    K =          43.2 conv/week
+    S = $       5,453
+    beta =      1.464
+    R2 =      0.444
   Constrained:
-    K =          10.2 conv/week
-    S = $       1,922
-    beta =      0.640
-    R2 =      0.020
+    K =          32.0 conv/week
+    S = $       2,967
+    beta =      1.561
+    R2 =      0.353
 
-EMAIL (Avg profit/conv: $1,054)
+EMAIL (Avg profit/conv: $2,318)
   Unconstrained:
-    K =         313.6 conv/week
-    S = $     106,439
-    beta =      0.769
-    R2 =      0.052
+    K =          91.5 conv/week
+    S = $      18,552
+    beta =      0.749
+    R2 =      0.499
   Constrained:
-    K =          48.3 conv/week
-    S = $       6,691
-    beta =      0.833
-    R2 =      0.052
+    K =          91.5 conv/week
+    S = $      18,552
+    beta =      0.749
+    R2 =      0.499
 
 
 4. OPTIMAL BUDGET ALLOCATION
 --------------------------------------------------
-Total weekly budget: $4,366
+Total weekly budget: $25,701
 Optimization: Max(Conversions x Avg Profit per Conversion)
 
 Channel           Current      Optimal       Change    Marg Profit
 --------------------------------------------------------------
-search       $     2,821 $     2,770         -$52 $           6
-social       $     1,345 $       715        -$630 $           6
-email        $       199 $       881        +$681 $           6
+search       $    17,081 $    14,167      -$2,914 $           5
+social       $     6,934 $     5,089      -$1,845 $           5
+email        $     1,686 $     6,445      +$4,759 $           5
 
 
 5. KEY INSIGHT
@@ -107,12 +107,12 @@ email        $       199 $       881        +$681 $           6
 
 With the ROI-saturation constraint, the model now believes:
 
-- EMAIL (highest ROI at 11x):
-  Operating at 3.0% of half-saturation
+- EMAIL (highest ROI at 17x):
+  Operating at 9.1% of half-saturation
   Has significant room to scale
 
-- SEARCH (lowest ROI at 6x):
-  Operating at 80.0% of half-saturation
+- SOCIAL (lowest ROI at 9x):
+  Operating at 233.7% of half-saturation
   Already approaching diminishing returns
 
 This aligns business intuition (high ROI = untapped potential) with

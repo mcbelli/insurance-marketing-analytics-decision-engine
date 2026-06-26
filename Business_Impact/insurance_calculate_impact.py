@@ -301,8 +301,8 @@ def create_impact_visualization(impact):
     # Add absolute values below x-axis labels
     p1_vals = [
         f'{impact["period1"]["conversions"]:,.0f} → {impact["period2"]["conversions"]:,.0f}',
-        f'${impact["period1"]["revenue"]/1e6:.1f}M → ${impact["period2"]["revenue"]/1e6:.1f}M',
-        f'${impact["period1"]["policy_profit"]/1e6:.1f}M → ${impact["period2"]["policy_profit"]/1e6:.1f}M'
+        f'\\${impact["period1"]["revenue"]/1e6:.1f}M → \\${impact["period2"]["revenue"]/1e6:.1f}M',
+        f'\\${impact["period1"]["policy_profit"]/1e6:.1f}M → \\${impact["period2"]["policy_profit"]/1e6:.1f}M'
     ]
     
     ax.axhline(y=0, color='black', linestyle='-', linewidth=0.5)

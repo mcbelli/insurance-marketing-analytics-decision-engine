@@ -10,11 +10,11 @@ This model estimates the relationship between marketing spend and policy convers
 
 | Channel | Total Spend | Total Conversions | Avg Profit/Conv | ROI | Recommendation |
 |---------|-------------|-------------------|-----------------|-----|----------------|
-| Email | $31,504 | 321 | $1,054 | **10.7x** | Increase 4x |
-| Paid Social | $212,555 | 692 | $3,059 | 10.0x | Reduce ~50% |
-| Paid Search | $445,758 | 1,149 | $2,202 | 5.7x | Hold steady |
+| Email | $60,713 | 449 | $2,318 | **17.1x** | Increase ~4x |
+| Paid Social | $249,616 | 834 | $2,561 | 8.6x | Reduce |
+| Paid Search | $614,901 | 1,298 | $4,727 | 10.0x | Trim |
 
-The counterintuitive insight: email has the lowest profit per conversion ($1,054 vs $3,059 for social), yet generates the highest ROI because its acquisition cost ($8/lead) is dramatically lower than other channels.
+The counterintuitive insight: email has the lowest profit per conversion ($2,318 vs $4,727 for search), yet generates the highest ROI because its acquisition cost ($8/lead) is dramatically lower than other channels.
 
 ---
 
@@ -53,7 +53,7 @@ Conversions(Spend) = K × Spend^β / (S^β + Spend^β)
 ```
 
 Where:
-- **K** = Maximum achievable conversions per week (saturation ceiling)
+- **K** = Maximum achievable conversions per month (saturation ceiling)
 - **S** = Half-saturation point (spend level at which conversions reach 50% of K)
 - **β** = Shape parameter (controls steepness of the curve)
 
@@ -75,27 +75,27 @@ This prevents the model from concluding that high-ROI channels are "saturated" w
 
 | Channel | R² (conversions) | Interpretation |
 |---------|------------------|----------------|
-| Search | **0.26** | Good fit - clear spend→conversion relationship |
-| Social | 0.02 | Weak fit - high variance in conversions |
-| Email | 0.05 | Weak fit - limited spend variation |
+| Search | **0.57** | Clear spend→conversion relationship |
+| Social | 0.44 | Moderate fit; noisier near saturation |
+| Email | 0.50 | Good fit on the steep part of the curve |
 
 ### Fitted Parameters
 
-| Channel | K (Max Conv/wk) | S (Half-Sat) | Saturation Proximity | Avg Profit/Conv |
+| Channel | K (Max Conv/mo) | S (Half-Sat) | Saturation Proximity | Avg Profit/Conv |
 |---------|-----------------|--------------|----------------------|-----------------|
-| Email | 26.4 | $2,509 | 0.08 (far from saturation) | $1,054 |
-| Social | 11.6 | $2,861 | 0.47 (below half-sat) | $3,059 |
-| Search | 18.7 | $3,577 | 0.79 (near half-sat) | $2,202 |
+| Email | 91 | $18,552 | 8% (far from saturation) | $2,318 |
+| Social | 32 | $2,967 | 70% (near saturation) | $2,561 |
+| Search | 45 | $7,637 | 69% (near saturation) | $4,727 |
 
 ### Optimal Budget Allocation
 
-For a fixed weekly budget of $4,366:
+For a fixed monthly budget of $25,701:
 
 | Channel | Current | Optimal | Change |
 |---------|---------|---------|--------|
-| Search | $2,821 | $2,875 | +$54 |
-| Social | $1,345 | $713 | **-$632** |
-| Email | $199 | $778 | **+$579** |
+| Search | $17,081 | $14,167 | **-$2,914** |
+| Social | $6,934 | $5,089 | **-$1,845** |
+| Email | $1,686 | $6,445 | **+$4,759** |
 
 At optimal, marginal profit per dollar is equalized across channels.
 
@@ -105,21 +105,20 @@ At optimal, marginal profit per dollar is equalized across channels.
 
 | File | Description |
 |------|-------------|
-| `insurance_model_with_rules.py` | Main model with ROI-saturation constraint |
-| `generate_insurance_data.py` | Synthetic data generator |
+| `MMM/insurance_marketing_mix_model.py` | Main model with ROI-saturation constraint |
+| `notebooks/generate_insurance_data_v2.py` | Synthetic data generator (spend-driven response + cross-sell) |
 
 ### Running the Model
 
 ```bash
-python insurance_model_with_rules.py
+python notebooks/generate_insurance_data_v2.py   # regenerate the dataset
+python MMM/insurance_marketing_mix_model.py       # fit the model + render charts
 ```
-
-Outputs saved to `./constrained_model_outputs/`
 
 ---
 
 ## Recommendations
 
-1. **Increase email spend** from ~$200/week to ~$800/week (4x increase)
-2. **Reduce social spend** by ~50% and reallocate to email
+1. **Increase email spend** from ~$1,686/month to ~$6,445/month (~4x increase)
+2. **Trim search and social** (both near saturation) and reallocate to email
 3. **Run controlled experiments** to validate predictions before large budget shifts

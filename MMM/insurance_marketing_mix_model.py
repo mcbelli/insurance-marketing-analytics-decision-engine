@@ -113,9 +113,9 @@ def load_and_prepare_data(data_dir):
     )
     
     # Week identifiers
-    leads['week'] = leads['lead_date'].dt.to_period('W').dt.start_time
-    search_spend['week'] = search_spend['date'].dt.to_period('W').dt.start_time
-    social_spend['week'] = social_spend['date'].dt.to_period('W').dt.start_time
+    leads['week'] = leads['lead_date'].dt.to_period('M').dt.start_time
+    search_spend['week'] = search_spend['date'].dt.to_period('M').dt.start_time
+    social_spend['week'] = social_spend['date'].dt.to_period('M').dt.start_time
     
     # Aggregate spend by week
     search_weekly = search_spend.groupby('week')['spend'].sum().reset_index()
@@ -136,10 +136,12 @@ def load_and_prepare_data(data_dir):
     profit_by_channel.columns = [f'{c}_profit' for c in profit_by_channel.columns]
     profit_by_channel = profit_by_channel.reset_index()
     
-    # Email spend
-    email_leads = leads[leads['channel'] == 'email'].groupby('week')['lead_id'].nunique().reset_index()
-    email_leads.columns = ['week', 'email_leads']
-    email_leads['email_spend'] = email_leads['email_leads'] * EMAIL_CPL
+    # Email spend (independent monthly series, like search/social)
+    email_spend_raw = pd.read_csv(data_dir / 'email_daily_spend.csv')
+    email_spend_raw['date'] = pd.to_datetime(email_spend_raw['date'])
+    email_spend_raw['week'] = email_spend_raw['date'].dt.to_period('M').dt.start_time
+    email_leads = email_spend_raw.groupby('week')['spend'].sum().reset_index()
+    email_leads.columns = ['week', 'email_spend']
     
     # Merge
     weekly_data = search_weekly.merge(social_weekly, on='week', how='outer')
@@ -246,7 +248,7 @@ def fit_unconstrained_hill(weekly_data, channel, channel_stats):
             spend_fit,
             conversions_fit,
             p0=[conversions_fit.max() * 2, np.median(spend_fit), 0.8],
-            bounds=([0, 0, 0.1], [np.inf, np.inf, 3.0]),
+            bounds=([0, 1, 0.1], [np.inf, 3*spend_fit.max(), 3.0]),
             maxfev=10000
         )
         
@@ -374,7 +376,8 @@ def fit_constrained_hill_all_channels(weekly_data, channel_stats):
     
     for ch in channels:
         desired_S = current_spends[ch] / target_sat_prox[ch]
-        x0[param_idx[ch]['S']] = desired_S
+        smax_ch = channel_data[ch]['spend'].max()
+        x0[param_idx[ch]['S']] = min(max(desired_S, smax_ch*0.05), smax_ch*3)
     
     print("\nInitial S values (adjusted to satisfy constraints):")
     for ch in channels:
@@ -385,8 +388,9 @@ def fit_constrained_hill_all_channels(weekly_data, channel_stats):
     # Note: K bounds are smaller now since we're fitting conversions (counts, not dollars)
     bounds = []
     for ch in channels:
-        bounds.append((0.1, None))      # K (max conversions)
-        bounds.append((10, None))       # S
+        smax = channel_data[ch]['spend'].max()
+        bounds.append((0.1, None))                      # K (max conversions)
+        bounds.append((max(10.0, smax * 0.05), smax * 3))  # S bounded to observed range
         bounds.append((0.1, 3.0))       # beta
     
     print("\nFitting constrained model (response = conversions)...")
@@ -545,13 +549,13 @@ def plot_comparison(weekly_data, unconstrained, constrained, channel_stats, outp
         ax.axvline(x=p['S'], color=colors[channel], linestyle=':', alpha=0.5)
         ax.axvline(x=p['current_spend'], color='black', linestyle=':', alpha=0.5)
         
-        ax.set_xlabel('Weekly Spend ($)')
-        ax.set_ylabel('Weekly Conversions')
+        ax.set_xlabel('Monthly Spend ($)')
+        ax.set_ylabel('Monthly Conversions')
         roi = channel_stats[channel]['avg_roi']
         ax.set_title(f'{channel.title()} (Avg ROI: {roi:.1f}x)')
         ax.legend(fontsize=8)
         ax.grid(True, alpha=0.3)
-        ax.set_xlim(0, None)
+        ax.set_xlim(0, spend[mask].max() * 1.15)
         ax.set_ylim(0, None)
     
     # Row 2: Saturation analysis
@@ -619,8 +623,8 @@ def plot_comparison(weekly_data, unconstrained, constrained, channel_stats, outp
     ax.bar(x_pos + width, opt_con_alloc, width, label='Optimal (Constr.)', color='green', alpha=0.7)
     
     ax.set_xlabel('Channel')
-    ax.set_ylabel('Weekly Spend ($)')
-    ax.set_title(f'Budget Allocation (Total: ${total_budget:,.0f}/week)')
+    ax.set_ylabel('Monthly Spend ($)')
+    ax.set_title(f'Budget Allocation (Total: ${total_budget:,.0f}/month)')
     ax.set_xticks(x_pos)
     ax.set_xticklabels([ch.title() for ch in channels])
     ax.legend()
@@ -648,7 +652,7 @@ def create_homepage_image(constrained, channel_stats, output_dir):
     
     # Left panel: Marginal ROI at Different Spend Levels
     ax = axes[0]
-    spend_levels = [500, 1000, 2000, 3000, 4000, 5000]
+    spend_levels = [2000, 5000, 9000, 13000, 17000, 21000]
     x_pos = np.arange(len(spend_levels))
     width = 0.25
     
@@ -664,7 +668,7 @@ def create_homepage_image(constrained, channel_stats, output_dir):
                label=ch.title(), color=colors[ch], alpha=0.8)
     
     ax.axhline(y=1, color='gray', linestyle='--', linewidth=1, label='Break-even')
-    ax.set_xlabel('Weekly Spend Level ($)', fontsize=11)
+    ax.set_xlabel('Monthly Spend Level ($)', fontsize=11)
     ax.set_ylabel('Marginal Profit per $1 Spent', fontsize=11)
     ax.set_title('Marginal ROI at Different Spend Levels', fontsize=12, fontweight='bold')
     ax.set_xticks(x_pos + width)
@@ -705,8 +709,8 @@ def create_homepage_image(constrained, channel_stats, output_dir):
                     ha='center', va='bottom', fontsize=9)
     
     ax.set_xlabel('Channel', fontsize=11)
-    ax.set_ylabel('Weekly Spend ($)', fontsize=11)
-    ax.set_title(f'Current vs Optimal Budget Allocation\n(Total: ${total_budget:,.0f}/week)', 
+    ax.set_ylabel('Monthly Spend ($)', fontsize=11)
+    ax.set_title(f'Current vs Optimal Budget Allocation\n(Total: ${total_budget:,.0f}/month)', 
                  fontsize=12, fontweight='bold')
     ax.set_xticks(x_pos)
     ax.set_xticklabels([ch.title() for ch in channels])
@@ -868,7 +872,7 @@ def main():
     
     print("\nChannel Statistics:")
     for ch, stats in channel_stats.items():
-        print(f"  {ch}: ROI = {stats['avg_roi']:.1f}x, Avg Weekly Spend = ${stats['avg_weekly_spend']:,.0f}, " +
+        print(f"  {ch}: ROI = {stats['avg_roi']:.1f}x, Avg Monthly Spend = ${stats['avg_weekly_spend']:,.0f}, " +
               f"Avg Profit/Conv = ${stats['avg_profit_per_conversion']:,.0f}")
     
     # Fit unconstrained models

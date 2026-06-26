@@ -25,7 +25,7 @@ OUTPUT_DIR = BASE_DIR
 # Economic assumptions (must match MMM)
 EXPENSE_RATIO = 0.30
 DISCOUNT_RATE = 0.10
-WEEKS_PER_PERIOD = 52  # 1 year per period
+WEEKS_PER_PERIOD = 12  # 1 year per period (monthly unit)
 
 
 # =============================================================================
@@ -64,7 +64,7 @@ def load_mmm_results():
     return results
 
 
-def simulate_period(params, allocation, weeks=52):
+def simulate_period(params, allocation, weeks=12):
     """
     Simulate a period (e.g., 1 year) with given budget allocation.
     
@@ -164,7 +164,7 @@ def run_optimization_simulation():
     }
     total_budget = sum(current_allocation.values())
     
-    print(f"\nTotal weekly budget: ${total_budget:,.0f}")
+    print(f"\nTotal monthly budget: ${total_budget:,.0f}")
     print(f"Simulation period: {WEEKS_PER_PERIOD} weeks")
     
     # Find optimal allocation
@@ -255,7 +255,7 @@ def create_optimization_charts(results):
     ax.bar(x_pos + width/2, period2_spend, width, label='Period 2 (Optimal)', color='green', alpha=0.8)
     
     ax.set_xlabel('Channel')
-    ax.set_ylabel('Weekly Spend ($)')
+    ax.set_ylabel('Monthly Spend ($)')
     ax.set_title('Budget Allocation', fontweight='bold')
     ax.set_xticks(x_pos)
     ax.set_xticklabels([ch.title() for ch in channels])
